@@ -98,7 +98,7 @@ The blog post should be comprehensive but concise, highlighting the main points 
 """
     
     # Call Gemini API
-    url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent'   
+    url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'   
     payload = {
         "contents": [{
             "parts": [{
