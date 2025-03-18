@@ -2,7 +2,7 @@
 import re
 import asyncio
 from typing import List, Dict, Optional, Any
-from crawl4ai import AsyncWebCrawler, BrowserParams
+from crawl4ai import AsyncWebCrawler
 
 class YouTubeTranscriptCrawler:
     """A YouTube transcript extractor using the open-source crawl4ai library."""
@@ -40,27 +40,27 @@ class YouTubeTranscriptCrawler:
         youtube_url = f"https://www.youtube.com/watch?v={video_id}"
         
         try:
-            # Create browser parameters for better transcript extraction
-            browser_params = BrowserParams(
-                wait_for_selector=".html5-video-container",  # Wait for video player to appear
-                timeout=60000,  # 60 seconds timeout
-                wait_until="networkidle2",  # Wait until network is idle
-                js_enabled=True,  # JavaScript must be enabled
-                block_images=True,  # Block images to save bandwidth
-                block_css=False,  # Keep CSS for caption styling
-                block_fonts=True,  # Block fonts to save bandwidth
-                stealth_mode=True  # Use stealth mode to avoid detection
-            )
-
-            # Create extraction script for captions
-            extraction_js = self._get_extraction_script()
-            
             # Create crawler instance
             async with AsyncWebCrawler() as crawler:
+                # Create browser configuration parameters
+                browser_config = {
+                    "wait_for_selector": ".html5-video-container",  # Wait for video player to appear
+                    "timeout": 60000,  # 60 seconds timeout
+                    "wait_until": "networkidle2",  # Wait until network is idle
+                    "js_enabled": True,  # JavaScript must be enabled
+                    "block_images": True,  # Block images to save bandwidth
+                    "block_css": False,  # Keep CSS for caption styling
+                    "block_fonts": True,  # Block fonts to save bandwidth
+                    "stealth_mode": True  # Use stealth mode to avoid detection
+                }
+                
+                # Create extraction script for captions
+                extraction_js = self._get_extraction_script()
+                
                 # Run the crawler with custom extraction script
                 result = await crawler.arun(
                     url=youtube_url,
-                    browser_params=browser_params,
+                    browser_config=browser_config,  # Using browser_config instead of BrowserParams
                     js_to_execute=extraction_js,
                     extract_text=False,  # We'll use our custom extraction instead
                     extract_metadata=True
