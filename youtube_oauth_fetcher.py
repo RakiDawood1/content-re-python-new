@@ -6,8 +6,10 @@ import time
 import pickle
 import base64
 import requests
+import traceback
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Optional, Any
+from datetime import datetime
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import Flow
@@ -21,8 +23,12 @@ class YouTubeTranscriptFetcher:
         self.client_secret = os.environ.get("GOOGLE_CLIENT_SECRET")
         self.oauth_token = os.environ.get("YOUTUBE_OAUTH_TOKEN")
         
-        # Define OAuth scopes needed
-        self.scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
+        # Define OAuth scopes needed - Updated with all required scopes
+        self.scopes = [
+            "https://www.googleapis.com/auth/youtube.force-ssl",
+            "https://www.googleapis.com/auth/youtube",
+            "https://www.googleapis.com/auth/youtube.readonly"
+        ]
         
         # Create a session for requests
         self.session = requests.Session()
@@ -541,3 +547,158 @@ class YouTubeTranscriptFetcher:
         token_b64 = base64.b64encode(token_bytes).decode('utf-8')
         
         return token_b64
+        
+    def diagnose_transcript_access(self, video_id):
+        """
+        Diagnose issues with transcript access using YouTube Data API
+        
+        Args:
+            video_id: YouTube video ID
+            
+        Returns:
+            Dict with diagnostic information
+        """
+        diagnostics = {
+            "video_id": video_id,
+            "timestamp": datetime.now().isoformat(),
+            "api_key_present": bool(self.api_key),
+            "oauth_token_present": bool(self.oauth_token),
+            "steps": [],
+            "transcript_found": False,
+            "error": None
+        }
+        
+        try:
+            # Step 1: Check if we can get video info
+            diagnostics["steps"].append({"step": "Get video info", "status": "attempting"})
+            video_info = self._get_youtube_video_info(video_id)
+            
+            if video_info:
+                diagnostics["steps"][-1]["status"] = "success"
+                diagnostics["video_title"] = video_info.get("title")
+                diagnostics["video_channel"] = video_info.get("channelTitle")
+                diagnostics["has_captions"] = video_info.get("caption", False)
+            else:
+                diagnostics["steps"][-1]["status"] = "failed"
+                diagnostics["steps"][-1]["error"] = "Could not retrieve video info"
+                return diagnostics
+            
+            # Step 2: Check if caption tracks exist using the Data API
+            diagnostics["steps"].append({"step": "List caption tracks", "status": "attempting"})
+            youtube = self.get_youtube_service()
+            
+            if not youtube:
+                diagnostics["steps"][-1]["status"] = "failed"
+                diagnostics["steps"][-1]["error"] = "Could not create YouTube service (OAuth issues)"
+                return diagnostics
+            
+            try:
+                captions_response = youtube.captions().list(
+                    part="snippet",
+                    videoId=video_id
+                ).execute()
+                
+                captions = captions_response.get("items", [])
+                diagnostics["steps"][-1]["status"] = "success"
+                diagnostics["caption_tracks_count"] = len(captions)
+                
+                if captions:
+                    diagnostics["caption_tracks"] = []
+                    for caption in captions:
+                        track_info = {
+                            "id": caption.get("id"),
+                            "language": caption.get("snippet", {}).get("language"),
+                            "language_name": caption.get("snippet", {}).get("name"),
+                            "track_kind": caption.get("snippet", {}).get("trackKind"),
+                            "is_cc": caption.get("snippet", {}).get("trackKind") == "closedCaption",
+                            "is_asr": caption.get("snippet", {}).get("trackKind") == "ASR"
+                        }
+                        diagnostics["caption_tracks"].append(track_info)
+                else:
+                    diagnostics["steps"][-1]["note"] = "No caption tracks found"
+                    return diagnostics
+                
+                # Step 3: Try to download a caption track
+                diagnostics["steps"].append({"step": "Download caption track", "status": "attempting"})
+                
+                # Find an English track or use the first available
+                caption_id = None
+                for track in diagnostics["caption_tracks"]:
+                    if track["language"] == "en":
+                        caption_id = track["id"]
+                        break
+                
+                if not caption_id and diagnostics["caption_tracks"]:
+                    caption_id = diagnostics["caption_tracks"][0]["id"]
+                
+                if caption_id:
+                    try:
+                        # Try to download the caption track
+                        caption_response = youtube.captions().download(
+                            id=caption_id,
+                            tfmt="srt"
+                        ).execute()
+                        
+                        # If we get here, it succeeded
+                        diagnostics["steps"][-1]["status"] = "success"
+                        diagnostics["transcript_found"] = True
+                        
+                        # Include a sample of the transcript if available
+                        if isinstance(caption_response, bytes):
+                            sample = caption_response[:200].decode('utf-8', errors='replace')
+                            diagnostics["transcript_sample"] = sample
+                        
+                    except HttpError as e:
+                        diagnostics["steps"][-1]["status"] = "failed"
+                        diagnostics["steps"][-1]["error"] = str(e)
+                        
+                        # Extract specific error reason
+                        error_reason = "Unknown error"
+                        if hasattr(e, 'reason'):
+                            error_reason = e.reason
+                        elif hasattr(e, 'content'):
+                            try:
+                                error_content = json.loads(e.content.decode('utf-8'))
+                                error_reason = error_content.get('error', {}).get('message', 'Unknown error')
+                            except:
+                                pass
+                        
+                        diagnostics["error"] = error_reason
+                else:
+                    diagnostics["steps"][-1]["status"] = "failed"
+                    diagnostics["steps"][-1]["error"] = "No caption ID found to download"
+            
+            except HttpError as e:
+                diagnostics["steps"][-1]["status"] = "failed"
+                diagnostics["steps"][-1]["error"] = str(e)
+                diagnostics["error"] = str(e)
+            
+            # Step 4: Try alternative methods if OAuth method failed
+            if not diagnostics["transcript_found"]:
+                diagnostics["steps"].append({"step": "Try alternative methods", "status": "attempting"})
+                
+                # Try direct URL method
+                transcript_url = self._get_direct_transcript_url(video_id, "en")
+                if transcript_url:
+                    diagnostics["steps"][-1]["status"] = "success"
+                    diagnostics["steps"][-1]["method"] = "direct_url"
+                    diagnostics["transcript_found"] = True
+                    diagnostics["transcript_url"] = transcript_url
+                else:
+                    # Try Invidious as a last resort
+                    segments = self._get_transcript_from_invidious(video_id, "en")
+                    if segments:
+                        diagnostics["steps"][-1]["status"] = "success"
+                        diagnostics["steps"][-1]["method"] = "invidious"
+                        diagnostics["transcript_found"] = True
+                        diagnostics["segments_count"] = len(segments)
+                    else:
+                        diagnostics["steps"][-1]["status"] = "failed"
+                        diagnostics["steps"][-1]["error"] = "All methods failed to find transcript"
+        
+        except Exception as e:
+            # Catch any unexpected errors
+            diagnostics["error"] = str(e)
+            diagnostics["traceback"] = traceback.format_exc()
+        
+        return diagnostics

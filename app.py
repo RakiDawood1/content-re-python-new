@@ -8,6 +8,7 @@ import time
 import uuid
 from functools import wraps
 from datetime import datetime, timedelta
+import traceback
 
 # Load environment variables
 load_dotenv()
@@ -38,7 +39,7 @@ os.environ["YOUTUBE_OAUTH_TOKEN"] = YOUTUBE_OAUTH_TOKEN if YOUTUBE_OAUTH_TOKEN e
 transcript_cache = {}
 
 # Import the transcript fetcher
-from youtube_oauth_fetcher import YouTubeTranscriptFetcher
+from youtube_hybrid_fetcher import YouTubeTranscriptFetcher
 
 def get_cache_key(video_id, language):
     """Generate a cache key from video ID and language"""
@@ -78,6 +79,10 @@ def fetch_transcript(video_id, language):
     # If the transcript is just an error message, make it easier to detect
     if len(transcript) == 1 and transcript[0].get('isUnavailableMessage'):
         print(f"Transcript unavailable for video {video_id}")
+        
+        # Include any detailed error information in the response
+        if 'errorDetails' in transcript[0]:
+            print(f"Error details: {transcript[0]['errorDetails']}")
     else:
         print(f"Successfully fetched transcript with {len(transcript)} segments")
     
@@ -405,6 +410,70 @@ def process_youtube():
             "success": False,
             "error": "Server error",
             "message": str(e)
+        }), 500
+
+@app.route('/api/diagnose', methods=['POST'])
+def diagnose_transcript():
+    """Diagnostic endpoint to check transcript availability and troubleshoot issues"""
+    try:
+        data = request.json
+        url = data.get('url')
+        
+        if not url:
+            return jsonify({
+                "success": False,
+                "error": "YouTube URL is required",
+                "message": "Please provide a valid YouTube URL in the request body"
+            }), 400
+        
+        # Extract video ID
+        fetcher = YouTubeTranscriptFetcher()
+        video_id = fetcher.extract_video_id(url)
+        
+        if not video_id:
+            return jsonify({
+                "success": False,
+                "error": "Invalid YouTube URL",
+                "message": "Could not extract a valid YouTube video ID from the provided URL"
+            }), 400
+        
+        # Run diagnostics
+        diagnostics = fetcher.diagnose_transcript_access(video_id)
+        
+        # Add some extra info about the environment
+        diagnostics["environment"] = {
+            "has_api_key": bool(YOUTUBE_API_KEY),
+            "has_oauth_token": bool(YOUTUBE_OAUTH_TOKEN),
+            "has_client_id": bool(GOOGLE_CLIENT_ID),
+            "has_client_secret": bool(GOOGLE_CLIENT_SECRET),
+            "debug_mode": DEBUG
+        }
+        
+        # Also try the standard transcript fetching method
+        try:
+            transcript = fetcher.get_transcript(video_id)
+            diagnostics["standard_method"] = {
+                "success": len(transcript) > 0 and not (len(transcript) == 1 and transcript[0].get('isUnavailableMessage')),
+                "segments_count": len(transcript),
+                "is_error_message": len(transcript) == 1 and transcript[0].get('isUnavailableMessage')
+            }
+        except Exception as e:
+            diagnostics["standard_method"] = {
+                "success": False,
+                "error": str(e)
+            }
+        
+        return jsonify({
+            "success": True,
+            "diagnostics": diagnostics
+        })
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": "Diagnostic error",
+            "message": str(e),
+            "traceback": traceback.format_exc()
         }), 500
 
 if __name__ == '__main__':
