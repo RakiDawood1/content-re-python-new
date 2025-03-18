@@ -14,6 +14,9 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+app = Flask(__name__)
+CORS(app, origins=["https://portfolio-1-dee95f.webflow.io"])  # Allow requests from your Webflow site
+
 # API configuration
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
