@@ -38,7 +38,7 @@ os.environ["YOUTUBE_OAUTH_TOKEN"] = YOUTUBE_OAUTH_TOKEN if YOUTUBE_OAUTH_TOKEN e
 transcript_cache = {}
 
 # Import the transcript fetcher
-from youtube_hybrid_fetcher import YouTubeTranscriptFetcher
+from youtube_oauth_fetcher import YouTubeTranscriptFetcher
 
 def get_cache_key(video_id, language):
     """Generate a cache key from video ID and language"""
