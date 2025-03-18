@@ -1,19 +1,19 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect, url_for, session
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 import json
 import requests
 import time
+import uuid
 from functools import wraps
 from datetime import datetime, timedelta
-# Import the transcript fetcher
-from youtube_data_api_fetcher import YouTubeTranscriptFetcher
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", str(uuid.uuid4()))
 CORS(app)  # Enable CORS for all routes
 
 # If you need specific CORS settings for your Webflow site
@@ -24,11 +24,21 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
+# OAuth configuration
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+YOUTUBE_OAUTH_TOKEN = os.environ.get("YOUTUBE_OAUTH_TOKEN")
+
+# Set expected environment variables for the OAuth fetcher
+os.environ["GOOGLE_CLIENT_ID"] = GOOGLE_CLIENT_ID if GOOGLE_CLIENT_ID else ""
+os.environ["GOOGLE_CLIENT_SECRET"] = GOOGLE_CLIENT_SECRET if GOOGLE_CLIENT_SECRET else ""
+os.environ["YOUTUBE_OAUTH_TOKEN"] = YOUTUBE_OAUTH_TOKEN if YOUTUBE_OAUTH_TOKEN else ""
+
 # In-memory cache 
 transcript_cache = {}
 
 # Import the transcript fetcher
-from youtube_data_api_fetcher import YouTubeTranscriptFetcher
+from youtube_oauth_fetcher import YouTubeTranscriptFetcher
 
 def get_cache_key(video_id, language):
     """Generate a cache key from video ID and language"""
@@ -173,9 +183,94 @@ def health_check():
         "timestamp": datetime.now().isoformat(),
         "api_keys": {
             "gemini": bool(GEMINI_API_KEY),
-            "youtube": bool(YOUTUBE_API_KEY)
+            "youtube": bool(YOUTUBE_API_KEY),
+            "oauth": bool(YOUTUBE_OAUTH_TOKEN)
         }
     })
+
+@app.route('/oauth/init', methods=['GET'])
+def oauth_init():
+    """Initialize OAuth flow"""
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        return jsonify({
+            "success": False,
+            "error": "OAuth configuration missing",
+            "message": "Google client ID and secret are required for OAuth"
+        }), 400
+        
+    try:
+        # Create the OAuth flow
+        base_url = request.url_root.rstrip('/')
+        redirect_uri = f"{base_url}/oauth2callback"
+        
+        fetcher = YouTubeTranscriptFetcher()
+        flow = fetcher.create_oauth_flow(redirect_uri)
+        
+        # Generate authorization URL
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent'
+        )
+        
+        # Store state in session
+        session['state'] = state
+        
+        # Redirect to authorization URL
+        return redirect(authorization_url)
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": "OAuth initialization failed",
+            "message": str(e)
+        }), 500
+
+@app.route('/oauth2callback')
+def oauth2callback():
+    """Handle OAuth callback"""
+    if 'state' not in session:
+        return jsonify({
+            "success": False,
+            "error": "Invalid state",
+            "message": "OAuth state missing from session"
+        }), 400
+        
+    try:
+        # Create the OAuth flow
+        base_url = request.url_root.rstrip('/')
+        redirect_uri = f"{base_url}/oauth2callback"
+        
+        fetcher = YouTubeTranscriptFetcher()
+        flow = fetcher.create_oauth_flow(redirect_uri)
+        
+        # Use the authorization code to get credentials
+        flow.fetch_token(authorization_response=request.url)
+        
+        # Get credentials
+        credentials = flow.credentials
+        
+        # Store credentials
+        token_data = fetcher.store_credentials(credentials)
+        
+        # Display token to add to environment variables
+        return f"""
+        <html>
+        <body>
+            <h1>YouTube API OAuth Successful</h1>
+            <p>Authentication successful! Add the following token to your environment variables as YOUTUBE_OAUTH_TOKEN:</p>
+            <textarea rows="10" cols="80" onclick="this.select()">{token_data}</textarea>
+            <p>After adding this token to your environment, restart your application.</p>
+        </body>
+        </html>
+        """
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": "OAuth callback failed",
+            "message": str(e)
+        }), 500
 
 @app.route('/api/process', methods=['POST', 'OPTIONS'])
 def process_youtube():
@@ -195,6 +290,7 @@ def process_youtube():
                 "environment": {
                     "hasGeminiApiKey": bool(GEMINI_API_KEY),
                     "hasYouTubeApiKey": bool(YOUTUBE_API_KEY),
+                    "hasOAuthToken": bool(YOUTUBE_OAUTH_TOKEN),
                     "debug": DEBUG
                 },
                 "timestamp": datetime.now().isoformat()
@@ -218,9 +314,11 @@ def process_youtube():
                 "parameters": {
                     "url": "YouTube video URL (required)",
                     "language": "Language code, defaults to 'en'",
-                    "generateBlog": "Boolean, generate blog post",
-                    "fallbackMessage": "Boolean, provide fallback message for unavailable transcripts",
-                    "debug": "Boolean, return debugging information"
+                    "generateBlog": "Boolean, generate blog post"
+                },
+                "oauth": {
+                    "setup": "Visit /oauth/init to set up OAuth for YouTube API",
+                    "required": "OAuth is required to access YouTube transcripts reliably"
                 },
                 "example": {
                     "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -240,6 +338,11 @@ def process_youtube():
                 "error": "YouTube URL is required",
                 "message": "Please provide a valid YouTube URL in the request body"
             }), 400
+        
+        # Check if OAuth is set up
+        if not YOUTUBE_OAUTH_TOKEN:
+            # Still proceed, but add a warning
+            print("Warning: YouTube OAuth token is not configured. Transcript fetching may be unreliable.")
         
         # Extract video ID
         fetcher = YouTubeTranscriptFetcher()
@@ -269,6 +372,11 @@ def process_youtube():
             # Check if the transcript is actually available
             if len(transcript) == 1 and transcript[0].get('isUnavailableMessage'):
                 result["transcriptUnavailable"] = True
+                
+                # Add OAuth setup message if not configured
+                if not YOUTUBE_OAUTH_TOKEN:
+                    result["oauthMissing"] = True
+                    result["oauthSetupUrl"] = url_for('oauth_init', _external=True)
         except Exception as e:
             print(f"Transcript fetch error: {e}")
             result["error"] = str(e)
