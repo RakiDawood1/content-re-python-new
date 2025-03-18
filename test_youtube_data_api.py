@@ -1,10 +1,12 @@
-from third_party_transcript_fetcher import ThirdPartyTranscriptFetcher
+# test_youtube_data_api.py
+import os
 import json
 import sys
+from youtube_data_api_captions import YouTubeDataAPITranscriptFetcher
 
-def test_transcript_fetcher():
+def test_youtube_data_api():
     # Create the fetcher
-    fetcher = ThirdPartyTranscriptFetcher()
+    fetcher = YouTubeDataAPITranscriptFetcher()
     
     # Accept command line argument for a specific video ID to test
     if len(sys.argv) > 1:
@@ -12,7 +14,6 @@ def test_transcript_fetcher():
         print(f"Testing specific video ID: {test_videos[0]}")
     else:
         # List of videos to test (use some popular videos known to have captions)
-        # Added more variety including educational content which often has good captions
         test_videos = [
             "9bZkp7q19f0",  # Gangnam Style
             "dQw4w9WgXcQ",  # Rick Astley - Never Gonna Give You Up
@@ -27,7 +28,21 @@ def test_transcript_fetcher():
         print(f"{'='*50}")
         
         try:
-            # Get transcript
+            # First, get available caption tracks
+            caption_tracks = fetcher.get_caption_tracks(video_id)
+            
+            print(f"Found {len(caption_tracks)} caption tracks")
+            
+            # Print caption track details
+            for i, track in enumerate(caption_tracks):
+                snippet = track.get('snippet', {})
+                print(f"\nTrack {i+1}:")
+                print(f"  Language: {snippet.get('language', 'unknown')}")
+                print(f"  Track kind: {snippet.get('trackKind', 'unknown')}")
+                print(f"  Last updated: {snippet.get('lastUpdated', 'unknown')}")
+                print(f"  Track ID: {track.get('id', 'unknown')}")
+                
+            # Now get the transcript
             transcript = fetcher.get_transcript(video_id)
             
             # Print some sample segments
@@ -57,4 +72,4 @@ def test_transcript_fetcher():
             print(f"❌ Failed for video {video_id}: {e}")
 
 if __name__ == "__main__":
-    test_transcript_fetcher()
+    test_youtube_data_api()

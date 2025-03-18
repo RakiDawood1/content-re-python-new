@@ -19,14 +19,16 @@ CORS(app, origins=["https://portfolio-1-dee95f.webflow.io"])  # Allow requests f
 
 # API configuration
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 # In-memory cache (would use Redis or another solution in production)
 transcript_cache = {}
 blog_cache = {}
 
-# Import the ThirdPartyTranscriptFetcher class
+# Import the transcript fetcher classes
 from third_party_transcript_fetcher import ThirdPartyTranscriptFetcher
+from youtube_data_api_captions import YouTubeDataAPITranscriptFetcher
 
 def get_cache_key(video_id, language):
     """Generate a cache key from video ID and language"""
@@ -59,9 +61,39 @@ def cache_transcript(func):
 
 @cache_transcript
 def fetch_transcript(video_id, language):
-    """Fetch transcript with caching"""
-    fetcher = ThirdPartyTranscriptFetcher()
-    return fetcher.get_transcript(video_id, language)
+    """Fetch transcript with caching and fallback between different fetching methods"""
+    # First, try to use the YouTube Data API if the API key is available
+    if YOUTUBE_API_KEY:
+        try:
+            print(f"Attempting to fetch transcript with YouTube Data API")
+            fetcher = YouTubeDataAPITranscriptFetcher()
+            transcript = fetcher.get_transcript(video_id, language)
+            
+            # If we got a real transcript (not just an error message), return it
+            if not (len(transcript) == 1 and transcript[0].get('isUnavailableMessage')):
+                print(f"Successfully fetched transcript with YouTube Data API")
+                return transcript
+                
+            print(f"YouTube Data API couldn't find transcript, trying fallback method")
+        except Exception as e:
+            print(f"Error using YouTube Data API: {e}")
+    
+    # Fallback to the original third-party method
+    try:
+        print(f"Attempting to fetch transcript with third-party method")
+        fetcher = ThirdPartyTranscriptFetcher()
+        transcript = fetcher.get_transcript(video_id, language)
+        return transcript
+    except Exception as e:
+        print(f"Error using third-party method: {e}")
+        
+        # If both methods fail, return a fallback message
+        return [{
+            "text": f"I'm sorry, the transcript for this video ({video_id}) is unavailable. The video likely doesn't have captions enabled or they're not accessible. Please try a different video with captions enabled.",
+            "start": 0,
+            "duration": 10,
+            "isUnavailableMessage": True
+        }]
 
 def generate_blog(transcript, video_id):
     """Generate a blog post from transcript using Gemini API"""
@@ -171,6 +203,7 @@ def process_youtube():
                 "message": "Debug information",
                 "environment": {
                     "hasGeminiApiKey": bool(GEMINI_API_KEY),
+                    "hasYouTubeApiKey": bool(YOUTUBE_API_KEY),
                     "debug": DEBUG
                 },
                 "timestamp": datetime.now().isoformat()
@@ -219,7 +252,7 @@ def process_youtube():
             }), 400
         
         # Extract video ID
-        fetcher = ThirdPartyTranscriptFetcher()
+        fetcher = ThirdPartyTranscriptFetcher()  # Just using this for the URL extraction
         video_id = fetcher.extract_video_id(url)
         
         if not video_id:
