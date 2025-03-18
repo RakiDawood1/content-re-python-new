@@ -19,7 +19,10 @@ class YouTubeTranscriptFetcher:
         self.oauth_token = os.environ.get("YOUTUBE_OAUTH_TOKEN")
         
         # Define OAuth scopes needed
-        self.scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
+        self.scopes = [
+            "https://www.googleapis.com/auth/youtube",
+            "https://www.googleapis.com/auth/youtube.force-ssl"
+        ]
 
     def extract_video_id(self, url: str) -> Optional[str]:
         """
