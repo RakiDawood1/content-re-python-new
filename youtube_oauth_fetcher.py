@@ -5,8 +5,11 @@ import html
 import time
 import pickle
 import base64
+import requests
+import xml.etree.ElementTree as ET
 from typing import List, Dict, Optional, Any
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 
@@ -19,10 +22,13 @@ class YouTubeTranscriptFetcher:
         self.oauth_token = os.environ.get("YOUTUBE_OAUTH_TOKEN")
         
         # Define OAuth scopes needed
-        self.scopes = [
-            "https://www.googleapis.com/auth/youtube",
-            "https://www.googleapis.com/auth/youtube.force-ssl"
-        ]
+        self.scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
+        
+        # Create a session for requests
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        })
 
     def extract_video_id(self, url: str) -> Optional[str]:
         """
@@ -137,113 +143,258 @@ class YouTubeTranscriptFetcher:
             print(f"Error creating YouTube service: {e}")
             return None
     
-    def get_transcript_with_oauth(self, video_id: str, language: str = 'en') -> List[Dict[str, Any]]:
+    def _get_youtube_video_info(self, video_id: str) -> Dict:
         """
-        Get transcript using YouTube Data API with OAuth
+        Get basic video info using YouTube Data API
         
         Args:
             video_id: YouTube video ID
-            language: Language code (default: 'en')
             
         Returns:
-            List of transcript segments or empty list if unsuccessful
+            Video metadata
         """
         youtube = self.get_youtube_service()
-        
         if not youtube:
-            print("YouTube service is not available. OAuth authentication required.")
+            return {}
+            
+        try:
+            response = youtube.videos().list(
+                part="snippet",
+                id=video_id
+            ).execute()
+            
+            if not response.get('items'):
+                return {}
+                
+            return response['items'][0]['snippet']
+        except Exception as e:
+            print(f"Error getting video info: {e}")
+            return {}
+            
+    def _list_caption_tracks(self, video_id: str) -> List[Dict]:
+        """
+        List available caption tracks for a video
+        
+        Args:
+            video_id: YouTube video ID
+            
+        Returns:
+            List of available caption tracks
+        """
+        youtube = self.get_youtube_service()
+        if not youtube:
             return []
             
         try:
-            # List captions for the video
-            captions_response = youtube.captions().list(
+            response = youtube.captions().list(
                 part="snippet",
                 videoId=video_id
             ).execute()
             
-            # Find the caption in the requested language
-            caption_id = None
-            for item in captions_response.get('items', []):
-                caption_language = item['snippet']['language']
-                if caption_language == language:
-                    caption_id = item['id']
-                    print(f"Found caption in requested language: {language}")
-                    break
+            return response.get('items', [])
+        except Exception as e:
+            print(f"Error listing caption tracks: {e}")
+            return []
+    
+    def _get_direct_transcript_url(self, video_id: str, language: str = 'en') -> Optional[str]:
+        """
+        Get the direct transcript URL (alternative method)
+        
+        Args:
+            video_id: YouTube video ID
+            language: Language code
             
-            # If not found, try English or any available caption
-            if not caption_id:
-                for item in captions_response.get('items', []):
-                    caption_language = item['snippet']['language']
-                    if caption_language == 'en':
-                        caption_id = item['id']
-                        print("Using English caption as fallback")
-                        break
+        Returns:
+            Transcript URL or None
+        """
+        try:
+            # First try to get available captions list
+            url = f"https://www.youtube.com/api/timedtext?type=list&v={video_id}"
+            response = self.session.get(url, timeout=10)
+            
+            if response.status_code == 200 and response.text:
+                try:
+                    root = ET.fromstring(response.text)
+                    available_langs = []
+                    
+                    for track in root.findall('.//track'):
+                        lang_code = track.get('lang_code', '')
+                        lang_name = track.get('name', '')
+                        available_langs.append((lang_code, lang_name))
                         
-            # If still not found, use the first available caption
-            if not caption_id and captions_response.get('items'):
-                caption_id = captions_response['items'][0]['id']
-                print("Using first available caption")
+                    # Find the requested language or fallbacks
+                    target_lang = None
+                    
+                    # First try exact match
+                    for lang_code, lang_name in available_langs:
+                        if lang_code == language:
+                            target_lang = lang_code
+                            break
+                            
+                    # If not found, try English or any available
+                    if not target_lang:
+                        for lang_code, lang_name in available_langs:
+                            if lang_code == 'en':
+                                target_lang = lang_code
+                                break
+                                
+                    if not target_lang and available_langs:
+                        target_lang = available_langs[0][0]
+                        
+                    if target_lang:
+                        transcript_url = f"https://www.youtube.com/api/timedtext?lang={target_lang}&v={video_id}"
+                        return transcript_url
+                        
+                except ET.ParseError:
+                    print("Error parsing caption list")
+                    
+            # Try common languages directly
+            langs_to_try = [language, 'en', 'en-US', 'en-GB']
+            for lang in langs_to_try:
+                url = f"https://www.youtube.com/api/timedtext?lang={lang}&v={video_id}"
+                response = self.session.get(url, timeout=10)
+                if response.status_code == 200 and response.text and len(response.text.strip()) > 0:
+                    return url
+                    
+            # Try with auto-generated captions
+            for lang in langs_to_try:
+                url = f"https://www.youtube.com/api/timedtext?lang={lang}&v={video_id}&kind=asr"
+                response = self.session.get(url, timeout=10)
+                if response.status_code == 200 and response.text and len(response.text.strip()) > 0:
+                    return url
             
-            if not caption_id:
-                print("No captions found for this video")
+            return None
+            
+        except Exception as e:
+            print(f"Error getting direct transcript URL: {e}")
+            return None
+            
+    def _get_transcript_from_url(self, url: str) -> List[Dict[str, Any]]:
+        """
+        Parse transcript from a direct URL
+        
+        Args:
+            url: Transcript URL
+            
+        Returns:
+            List of transcript segments
+        """
+        try:
+            response = self.session.get(url, timeout=10)
+            if response.status_code != 200 or not response.text:
                 return []
                 
-            # Download the caption track
-            caption_response = youtube.captions().download(
-                id=caption_id,
-                tfmt='srt'
-            ).execute()
-            
-            # Parse the SRT format
-            segments = []
-            srt_lines = caption_response.decode('utf-8').strip().split('\n\n')
-            
-            for srt_segment in srt_lines:
-                lines = srt_segment.split('\n')
-                if len(lines) >= 3:
-                    # Extract time codes
-                    time_line = lines[1]
-                    time_parts = time_line.split(' --> ')
-                    if len(time_parts) == 2:
-                        start_time = self._srt_time_to_seconds(time_parts[0])
-                        end_time = self._srt_time_to_seconds(time_parts[1])
-                        duration = end_time - start_time
-                        
-                        # Extract text (could be multiple lines)
-                        text = ' '.join(lines[2:])
-                        
-                        segments.append({
-                            "text": text,
-                            "start": start_time,
-                            "duration": duration
-                        })
-            
-            if segments:
-                print(f"Successfully retrieved {len(segments)} transcript segments via OAuth")
-                return segments
+            # Parse XML
+            try:
+                root = ET.fromstring(response.text)
+                segments = []
+                
+                for text in root.findall('.//text'):
+                    start = float(text.get('start', 0))
+                    duration = float(text.get('dur', 0))
+                    content = text.text or ''
+                    
+                    # Unescape HTML entities
+                    if '&' in content:
+                        content = html.unescape(content)
+                    
+                    segments.append({
+                        "text": content.strip(),
+                        "start": start,
+                        "duration": duration
+                    })
+                
+                if segments:
+                    print(f"Successfully retrieved {len(segments)} transcript segments")
+                    return segments
+                    
+            except ET.ParseError as e:
+                print(f"Error parsing transcript XML: {e}")
                 
             return []
             
         except Exception as e:
-            print(f"Error retrieving transcript with OAuth: {e}")
+            print(f"Error getting transcript from URL: {e}")
             return []
     
-    def _srt_time_to_seconds(self, time_str: str) -> float:
+    def _get_transcript_from_invidious(self, video_id: str, language: str = 'en') -> List[Dict[str, Any]]:
         """
-        Convert SRT time format (00:00:00,000) to seconds
+        Try to get transcript using Invidious instances
         
         Args:
-            time_str: Time string in SRT format
+            video_id: YouTube video ID
+            language: Language code
             
         Returns:
-            Time in seconds
+            List of transcript segments
         """
-        hours, minutes, seconds = time_str.replace(',', '.').split(':')
-        return float(hours) * 3600 + float(minutes) * 60 + float(seconds)
+        instances = [
+            "https://invidious.snopyta.org",
+            "https://yewtu.be",
+            "https://vid.puffyan.us",
+            "https://invidious.kavin.rocks"
+        ]
+        
+        for instance in instances:
+            try:
+                url = f"{instance}/api/v1/captions/{video_id}"
+                print(f"Trying Invidious instance: {url}")
+                
+                response = self.session.get(url, timeout=10)
+                if response.status_code == 200:
+                    try:
+                        data = response.json()
+                        captions = data.get("captions", [])
+                        
+                        if not captions:
+                            continue
+                            
+                        # Find caption in requested language
+                        caption_url = None
+                        for caption in captions:
+                            if caption.get("language_code") == language:
+                                caption_url = caption.get("url")
+                                break
+                                
+                        # If not found, try English or any available
+                        if not caption_url:
+                            for caption in captions:
+                                if caption.get("language_code") == "en":
+                                    caption_url = caption.get("url")
+                                    break
+                                    
+                        if not caption_url and captions:
+                            caption_url = captions[0].get("url")
+                            
+                        if caption_url:
+                            caption_response = self.session.get(caption_url, timeout=10)
+                            if caption_response.status_code == 200:
+                                try:
+                                    captions_data = caption_response.json()
+                                    segments = []
+                                    
+                                    for item in captions_data:
+                                        segments.append({
+                                            "text": item.get("text", ""),
+                                            "start": item.get("start", 0),
+                                            "duration": item.get("duration", 0)
+                                        })
+                                        
+                                    if segments:
+                                        print(f"Successfully retrieved {len(segments)} transcript segments from Invidious")
+                                        return segments
+                                except:
+                                    print("Error parsing Invidious caption data")
+                    except:
+                        print(f"Error parsing response from Invidious instance {instance}")
+            except Exception as e:
+                print(f"Error accessing Invidious instance {instance}: {e}")
+                
+        return []
     
     def get_transcript(self, video_id: str, language: str = 'en') -> List[Dict[str, Any]]:
         """
-        Get transcript for a YouTube video
+        Get transcript for a YouTube video using multiple methods
         
         Args:
             video_id: YouTube video ID
@@ -254,11 +405,107 @@ class YouTubeTranscriptFetcher:
         """
         print(f"Fetching transcript for video {video_id} in language {language}")
         
-        # Try OAuth approach first if token is available
-        if self.oauth_token:
-            segments = self.get_transcript_with_oauth(video_id, language)
+        # Method 1: List captions using OAuth to see if they exist
+        captions = self._list_caption_tracks(video_id)
+        if captions:
+            print(f"Found {len(captions)} caption tracks via OAuth")
+            
+            # Note: We won't try to download via OAuth since it typically fails with permission errors
+            # Instead, we'll use alternative methods to get the content
+        
+        # Method 2: Try to get direct transcript URL
+        transcript_url = self._get_direct_transcript_url(video_id, language)
+        if transcript_url:
+            print(f"Found direct transcript URL: {transcript_url}")
+            segments = self._get_transcript_from_url(transcript_url)
             if segments:
                 return segments
+        
+        # Method 3: Try Invidious API (alternative front-end)
+        segments = self._get_transcript_from_invidious(video_id, language)
+        if segments:
+            return segments
+        
+        # If we've verified captions exist via OAuth but couldn't get them directly,
+        # we'll try one more approach: Using HTML scraping as a last resort
+        if captions:
+            try:
+                print("Attempting to get transcript via HTML approach as last resort")
+                video_url = f"https://www.youtube.com/watch?v={video_id}"
+                response = self.session.get(video_url, timeout=15)
+                
+                if response.status_code == 200:
+                    # Try to find the caption track JSON in the HTML
+                    caption_json_pattern = r'"captionTracks":\[(.*?)\]'
+                    match = re.search(caption_json_pattern, response.text)
+                    
+                    if match:
+                        caption_data = "[" + match.group(1) + "]"
+                        caption_data = caption_data.replace('\\u0026', '&')
+                        
+                        try:
+                            tracks = json.loads(caption_data)
+                            if tracks:
+                                # Find base URL for the transcript
+                                base_url = None
+                                for track in tracks:
+                                    track_lang = track.get("languageCode")
+                                    if track_lang == language or track_lang == "en" or base_url is None:
+                                        base_url = track.get("baseUrl")
+                                        if track_lang == language:
+                                            break
+                                
+                                if base_url:
+                                    # Format might be different, try both
+                                    urls_to_try = [
+                                        f"{base_url}&fmt=json3",
+                                        base_url
+                                    ]
+                                    
+                                    for url in urls_to_try:
+                                        try:
+                                            data_response = self.session.get(url, timeout=10)
+                                            if data_response.status_code == 200:
+                                                # Try to parse as JSON first
+                                                try:
+                                                    json_data = data_response.json()
+                                                    segments = []
+                                                    
+                                                    # Parse JSON format
+                                                    if "events" in json_data:
+                                                        for event in json_data["events"]:
+                                                            if "segs" in event:
+                                                                start = event.get("tStartMs", 0) / 1000
+                                                                duration = event.get("dDurationMs", 0) / 1000
+                                                                
+                                                                text_parts = []
+                                                                for seg in event["segs"]:
+                                                                    if "utf8" in seg:
+                                                                        text_parts.append(seg["utf8"])
+                                                                
+                                                                if text_parts:
+                                                                    segments.append({
+                                                                        "text": "".join(text_parts).strip(),
+                                                                        "start": start,
+                                                                        "duration": duration
+                                                                    })
+                                                    
+                                                    if segments:
+                                                        print(f"Successfully retrieved {len(segments)} transcript segments via HTML approach")
+                                                        return segments
+                                                        
+                                                except json.JSONDecodeError:
+                                                    # Try to parse as XML
+                                                    try:
+                                                        return self._get_transcript_from_url(url)
+                                                    except:
+                                                        pass
+                                        except:
+                                            continue
+                        except:
+                            print("Error parsing caption data from HTML")
+            except Exception as e:
+                print(f"Error with HTML approach: {e}")
         
         # Return a fallback message as a single segment
         return [{
