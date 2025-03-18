@@ -38,8 +38,9 @@ os.environ["YOUTUBE_OAUTH_TOKEN"] = YOUTUBE_OAUTH_TOKEN if YOUTUBE_OAUTH_TOKEN e
 # In-memory cache 
 transcript_cache = {}
 
-# Import the transcript fetcher
-from youtube_hybrid_fetcher import YouTubeTranscriptFetcher
+# Import both fetchers with different aliases
+from youtube_hybrid_fetcher import YouTubeTranscriptFetcher as HybridFetcher
+from youtube_oauth_fetcher import YouTubeTranscriptFetcher as OAuthFetcher
 
 def get_cache_key(video_id, language):
     """Generate a cache key from video ID and language"""
@@ -73,7 +74,7 @@ def cache_transcript(func):
 @cache_transcript
 def fetch_transcript(video_id, language):
     """Fetch transcript with caching"""
-    fetcher = YouTubeTranscriptFetcher()
+    fetcher = HybridFetcher()  # Use hybrid fetcher for transcript retrieval
     transcript = fetcher.get_transcript(video_id, language)
     
     # If the transcript is just an error message, make it easier to detect
@@ -208,7 +209,8 @@ def oauth_init():
         base_url = request.url_root.rstrip('/')
         redirect_uri = f"{base_url}/oauth2callback"
         
-        fetcher = YouTubeTranscriptFetcher()
+        # Use OAuthFetcher for OAuth operations
+        fetcher = OAuthFetcher()
         flow = fetcher.create_oauth_flow(redirect_uri)
         
         # Generate authorization URL
@@ -246,7 +248,8 @@ def oauth2callback():
         base_url = request.url_root.rstrip('/')
         redirect_uri = f"{base_url}/oauth2callback"
         
-        fetcher = YouTubeTranscriptFetcher()
+        # Use OAuthFetcher for OAuth operations
+        fetcher = OAuthFetcher()
         flow = fetcher.create_oauth_flow(redirect_uri)
         
         # Use the authorization code to get credentials
@@ -350,7 +353,7 @@ def process_youtube():
             print("Warning: YouTube OAuth token is not configured. Transcript fetching may be unreliable.")
         
         # Extract video ID
-        fetcher = YouTubeTranscriptFetcher()
+        fetcher = HybridFetcher()  # Use hybrid fetcher for video ID extraction
         video_id = fetcher.extract_video_id(url)
         
         if not video_id:
@@ -427,7 +430,7 @@ def diagnose_transcript():
             }), 400
         
         # Extract video ID
-        fetcher = YouTubeTranscriptFetcher()
+        fetcher = HybridFetcher()  # Use hybrid fetcher for video ID extraction
         video_id = fetcher.extract_video_id(url)
         
         if not video_id:
@@ -437,8 +440,9 @@ def diagnose_transcript():
                 "message": "Could not extract a valid YouTube video ID from the provided URL"
             }), 400
         
-        # Run diagnostics
-        diagnostics = fetcher.diagnose_transcript_access(video_id)
+        # Run diagnostics - we need to use OAuthFetcher for this since diagnose_transcript_access is in that class
+        oauth_fetcher = OAuthFetcher()
+        diagnostics = oauth_fetcher.diagnose_transcript_access(video_id)
         
         # Add some extra info about the environment
         diagnostics["environment"] = {
@@ -449,7 +453,7 @@ def diagnose_transcript():
             "debug_mode": DEBUG
         }
         
-        # Also try the standard transcript fetching method
+        # Also try the standard transcript fetching method with the hybrid fetcher
         try:
             transcript = fetcher.get_transcript(video_id)
             diagnostics["standard_method"] = {
