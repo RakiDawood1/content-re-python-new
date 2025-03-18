@@ -1,25 +1,24 @@
-# test_youtube_data_api.py
-import os
+# test_youtube_transcript.py
+from youtube_transcript_fetcher import YouTubeTranscriptFetcher
 import json
 import sys
-from youtube_data_api_captions import YouTubeDataAPITranscriptFetcher
 
-def test_youtube_data_api():
+def test_transcript_fetcher():
     # Create the fetcher
-    fetcher = YouTubeDataAPITranscriptFetcher()
+    fetcher = YouTubeTranscriptFetcher()
     
     # Accept command line argument for a specific video ID to test
     if len(sys.argv) > 1:
         test_videos = [sys.argv[1]]
         print(f"Testing specific video ID: {test_videos[0]}")
     else:
-        # List of videos to test (use some popular videos known to have captions)
+        # List of videos to test (videos known to have good captions)
         test_videos = [
+            "8S0FDjFBj8o",  # TED Talk (likely has good captions)
+            "jNQXAC9IVRw",  # First YouTube video ever
             "9bZkp7q19f0",  # Gangnam Style
             "dQw4w9WgXcQ",  # Rick Astley - Never Gonna Give You Up
-            "8UVNT4wvIGY",  # Gotye - Somebody That I Used to Know
-            "rYEDA3JcQqw",  # Adele - Rolling in the Deep
-            "TcMBFSGVi1c"   # Avengers: Endgame Trailer
+            "TvXm6HInpeU"   # Another TED Talk
         ]
     
     for video_id in test_videos:
@@ -28,21 +27,7 @@ def test_youtube_data_api():
         print(f"{'='*50}")
         
         try:
-            # First, get available caption tracks
-            caption_tracks = fetcher.get_caption_tracks(video_id)
-            
-            print(f"Found {len(caption_tracks)} caption tracks")
-            
-            # Print caption track details
-            for i, track in enumerate(caption_tracks):
-                snippet = track.get('snippet', {})
-                print(f"\nTrack {i+1}:")
-                print(f"  Language: {snippet.get('language', 'unknown')}")
-                print(f"  Track kind: {snippet.get('trackKind', 'unknown')}")
-                print(f"  Last updated: {snippet.get('lastUpdated', 'unknown')}")
-                print(f"  Track ID: {track.get('id', 'unknown')}")
-                
-            # Now get the transcript
+            # Get the transcript
             transcript = fetcher.get_transcript(video_id)
             
             # Print some sample segments
@@ -64,6 +49,10 @@ def test_youtube_data_api():
                     print("\nMiddle 3 segments:")
                     for i, segment in enumerate(transcript[mid_point:mid_point+3]):
                         print(f"  {mid_point+i+1}. [{segment['start']:.2f}s]: {segment['text']}")
+                
+                # Print total transcript length
+                total_text = ' '.join([segment['text'] for segment in transcript])
+                print(f"\nTotal transcript length: {len(total_text)} characters")
             
             # Success
             print(f"\n✅ Success for video {video_id}")
@@ -72,4 +61,4 @@ def test_youtube_data_api():
             print(f"❌ Failed for video {video_id}: {e}")
 
 if __name__ == "__main__":
-    test_youtube_data_api()
+    test_transcript_fetcher()

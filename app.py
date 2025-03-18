@@ -14,21 +14,19 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-app = Flask(__name__)
-CORS(app, origins=["https://portfolio-1-dee95f.webflow.io"])  # Allow requests from your Webflow site
+# If you need specific CORS settings for your Webflow site
+CORS(app, origins=["https://portfolio-1-dee95f.webflow.io"])
 
 # API configuration
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
-# In-memory cache (would use Redis or another solution in production)
+# In-memory cache 
 transcript_cache = {}
-blog_cache = {}
 
-# Import the transcript fetcher classes
-from third_party_transcript_fetcher import ThirdPartyTranscriptFetcher
-from youtube_data_api_captions import YouTubeDataAPITranscriptFetcher
+# Import the transcript fetcher
+from youtube_transcript_fetcher import YouTubeTranscriptFetcher
 
 def get_cache_key(video_id, language):
     """Generate a cache key from video ID and language"""
@@ -61,39 +59,17 @@ def cache_transcript(func):
 
 @cache_transcript
 def fetch_transcript(video_id, language):
-    """Fetch transcript with caching and fallback between different fetching methods"""
-    # First, try to use the YouTube Data API if the API key is available
-    if YOUTUBE_API_KEY:
-        try:
-            print(f"Attempting to fetch transcript with YouTube Data API")
-            fetcher = YouTubeDataAPITranscriptFetcher()
-            transcript = fetcher.get_transcript(video_id, language)
-            
-            # If we got a real transcript (not just an error message), return it
-            if not (len(transcript) == 1 and transcript[0].get('isUnavailableMessage')):
-                print(f"Successfully fetched transcript with YouTube Data API")
-                return transcript
-                
-            print(f"YouTube Data API couldn't find transcript, trying fallback method")
-        except Exception as e:
-            print(f"Error using YouTube Data API: {e}")
+    """Fetch transcript with caching"""
+    fetcher = YouTubeTranscriptFetcher()
+    transcript = fetcher.get_transcript(video_id, language)
     
-    # Fallback to the original third-party method
-    try:
-        print(f"Attempting to fetch transcript with third-party method")
-        fetcher = ThirdPartyTranscriptFetcher()
-        transcript = fetcher.get_transcript(video_id, language)
-        return transcript
-    except Exception as e:
-        print(f"Error using third-party method: {e}")
-        
-        # If both methods fail, return a fallback message
-        return [{
-            "text": f"I'm sorry, the transcript for this video ({video_id}) is unavailable. The video likely doesn't have captions enabled or they're not accessible. Please try a different video with captions enabled.",
-            "start": 0,
-            "duration": 10,
-            "isUnavailableMessage": True
-        }]
+    # If the transcript is just an error message, make it easier to detect
+    if len(transcript) == 1 and transcript[0].get('isUnavailableMessage'):
+        print(f"Transcript unavailable for video {video_id}")
+    else:
+        print(f"Successfully fetched transcript with {len(transcript)} segments")
+    
+    return transcript
 
 def generate_blog(transcript, video_id):
     """Generate a blog post from transcript using Gemini API"""
@@ -109,6 +85,15 @@ def generate_blog(transcript, video_id):
     
     # Extract the full text from the transcript
     full_text = ' '.join([segment['text'] for segment in transcript])
+    
+    if not full_text.strip():
+        return {
+            "title": "Empty Transcript",
+            "content": "Unable to generate a blog post because the transcript is empty.",
+            "videoId": video_id,
+            "generatedAt": datetime.now().isoformat(),
+            "wordCount": 0
+        }
     
     # Create the prompt for Gemini
     prompt = f"""
@@ -183,7 +168,11 @@ def health_check():
     """Health check endpoint"""
     return jsonify({
         "status": "ok",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "api_keys": {
+            "gemini": bool(GEMINI_API_KEY),
+            "youtube": bool(YOUTUBE_API_KEY)
+        }
     })
 
 @app.route('/api/process', methods=['POST', 'OPTIONS'])
@@ -242,7 +231,6 @@ def process_youtube():
         url = data.get('url')
         language = data.get('language', 'en')
         should_generate_blog = data.get('generateBlog', True)
-        fallback_message = data.get('fallbackMessage', True)
         
         if not url:
             return jsonify({
@@ -252,7 +240,7 @@ def process_youtube():
             }), 400
         
         # Extract video ID
-        fetcher = ThirdPartyTranscriptFetcher()  # Just using this for the URL extraction
+        fetcher = YouTubeTranscriptFetcher()
         video_id = fetcher.extract_video_id(url)
         
         if not video_id:
@@ -275,27 +263,15 @@ def process_youtube():
             transcript = fetch_transcript(video_id, language)
             result["transcript"] = transcript
             print(f"Fetched {len(transcript)} transcript segments in {time.time() - start_time:.2f}s")
+            
+            # Check if the transcript is actually available
+            if len(transcript) == 1 and transcript[0].get('isUnavailableMessage'):
+                result["transcriptUnavailable"] = True
         except Exception as e:
             print(f"Transcript fetch error: {e}")
-            
-            # If fallback message is enabled, create a placeholder transcript
-            if fallback_message:
-                transcript = [{
-                    "text": f"I'm sorry, the transcript for this video ({video_id}) is unavailable. The video likely doesn't have captions enabled or they're not accessible. Please try a different video with captions enabled.",
-                    "start": 0,
-                    "duration": 10,
-                    "isUnavailableMessage": True
-                }]
-                result["transcript"] = transcript
-                result["transcriptUnavailable"] = True
-                result["error"] = str(e)
-            else:
-                return jsonify({
-                    "success": False,
-                    "error": "Transcript unavailable",
-                    "message": f"Unable to retrieve transcript: {e}",
-                    "videoId": video_id
-                }), 404
+            result["error"] = str(e)
+            result["transcriptUnavailable"] = True
+            return jsonify(result), 500
         
         # Generate blog if requested
         if should_generate_blog and GEMINI_API_KEY:
@@ -308,12 +284,8 @@ def process_youtube():
                     blog["note"] = "This blog was generated without an actual video transcript. The content is based on a generic message as the video's transcript was unavailable."
             except Exception as blog_error:
                 print(f"Blog generation error: {blog_error}")
-                return jsonify({
-                    "success": False,
-                    "error": "Blog generation failed",
-                    "message": str(blog_error),
-                    "transcript": result.get("transcript")
-                }), 500
+                result["error"] = str(blog_error)
+                result["blogGenerationFailed"] = True
         
         return jsonify(result)
         
