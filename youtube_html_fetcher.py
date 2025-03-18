@@ -1,9 +1,7 @@
 # youtube_html_fetcher.py
 import re
 import json
-import html
 import requests
-import traceback
 from typing import List, Dict, Optional, Any
 
 class YouTubeHTMLTranscriptFetcher:
@@ -49,13 +47,14 @@ class YouTubeHTMLTranscriptFetcher:
         
         try:
             url = f"https://www.youtube.com/watch?v={video_id}"
-            response = self.session.get(url, timeout=15)
+            response = self.session.get(url, timeout=30)
             
             if response.status_code != 200:
                 print(f"Failed to fetch YouTube page: HTTP {response.status_code}")
                 return self._create_error_response(video_id)
             
             html_content = response.text
+            print(f"Got HTML content, length: {len(html_content)}")
             
             # Find player response data
             player_response_pattern = r'ytInitialPlayerResponse\s*=\s*({.+?});'
@@ -78,7 +77,7 @@ class YouTubeHTMLTranscriptFetcher:
                                   for track in caption_tracks]
                 print(f"Available caption tracks: {', '.join(available_langs)}")
                 
-                # Find target language or fallback to English or first available
+                # Find target language or fallback to any available
                 base_url = None
                 selected_lang = None
                 
@@ -109,10 +108,11 @@ class YouTubeHTMLTranscriptFetcher:
                     return self._create_error_response(video_id)
                 
                 print(f"Selected caption track: {selected_lang}")
+                print(f"Caption base URL: {base_url}")
                 
                 # Get caption JSON
                 caption_url = f"{base_url}&fmt=json3"
-                caption_response = self.session.get(caption_url, timeout=15)
+                caption_response = self.session.get(caption_url, timeout=30)
                 
                 if caption_response.status_code != 200:
                     print(f"Failed to fetch caption JSON: HTTP {caption_response.status_code}")
@@ -144,6 +144,9 @@ class YouTubeHTMLTranscriptFetcher:
                     
                     if segments:
                         print(f"Successfully extracted {len(segments)} transcript segments via HTML method")
+                        # Print a few examples for debugging
+                        for i, segment in enumerate(segments[:3]):
+                            print(f"  {i+1}. [{segment['start']:.2f}s]: {segment['text']}")
                         return segments
                     else:
                         print("No segments found in caption data")
@@ -151,17 +154,14 @@ class YouTubeHTMLTranscriptFetcher:
                         
                 except Exception as e:
                     print(f"Error parsing caption JSON: {e}")
-                    print(traceback.format_exc())
                     return self._create_error_response(video_id)
                     
             except Exception as e:
                 print(f"Error parsing player response: {e}")
-                print(traceback.format_exc())
                 return self._create_error_response(video_id)
                 
         except Exception as e:
             print(f"Error in HTML extraction method: {e}")
-            print(traceback.format_exc())
             return self._create_error_response(video_id)
             
     def _create_error_response(self, video_id: str) -> List[Dict[str, Any]]:
