@@ -7,6 +7,8 @@ import requests
 import time
 from functools import wraps
 from datetime import datetime, timedelta
+# Import the transcript fetcher
+from youtube_data_api_fetcher import YouTubeTranscriptFetcher
 
 # Load environment variables
 load_dotenv()
@@ -26,7 +28,7 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 transcript_cache = {}
 
 # Import the transcript fetcher
-from youtube_transcript_api_fetcher import YouTubeTranscriptFetcher
+from youtube_data_api_fetcher import YouTubeTranscriptFetcher
 
 def get_cache_key(video_id, language):
     """Generate a cache key from video ID and language"""

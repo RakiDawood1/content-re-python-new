@@ -1,5 +1,6 @@
 # test_api_fetcher.py
-from youtube_transcript_api_fetcher import YouTubeTranscriptFetcher
+# Import the transcript fetcher
+from youtube_data_api_fetcher import YouTubeTranscriptFetcher
 import json
 import sys
 
