@@ -480,6 +480,52 @@ def diagnose_transcript():
             "traceback": traceback.format_exc()
         }), 500
 
+# Add this route to your app.py
+
+@app.route('/api/test-captions', methods=['POST'])
+def test_captions():
+    """Simple test endpoint to check YouTube captions using just the Data API"""
+    try:
+        data = request.json
+        url = data.get('url')
+        
+        if not url:
+            return jsonify({
+                "success": False,
+                "error": "YouTube URL is required"
+            }), 400
+        
+        # Extract video ID
+        from youtube_hybrid_fetcher import YouTubeTranscriptFetcher
+        hybrid_fetcher = YouTubeTranscriptFetcher()
+        video_id = hybrid_fetcher.extract_video_id(url)
+        
+        if not video_id:
+            return jsonify({
+                "success": False,
+                "error": "Invalid YouTube URL"
+            }), 400
+        
+        # Use simple API to test caption access
+        from simple_youtube_data_api import SimpleYouTubeAPI
+        api_tester = SimpleYouTubeAPI()
+        
+        test_result = api_tester.test_video_caption_access(video_id)
+        
+        return jsonify({
+            "success": True,
+            "test_result": test_result
+        })
+    
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=DEBUG)
