@@ -1,5 +1,5 @@
-# test_youtube_transcript.py
-from youtube_transcript_fetcher import YouTubeTranscriptFetcher
+# test_api_fetcher.py
+from youtube_transcript_api_fetcher import YouTubeTranscriptFetcher
 import json
 import sys
 

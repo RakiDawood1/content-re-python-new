@@ -26,7 +26,7 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 transcript_cache = {}
 
 # Import the transcript fetcher
-from youtube_transcript_fetcher import YouTubeTranscriptFetcher
+from youtube_transcript_api_fetcher import YouTubeTranscriptFetcher
 
 def get_cache_key(video_id, language):
     """Generate a cache key from video ID and language"""
