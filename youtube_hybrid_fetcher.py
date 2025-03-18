@@ -1,4 +1,4 @@
-# Create a new file called youtube_hybrid_fetcher.py
+# youtube_hybrid_fetcher.py
 
 import re
 import os
@@ -14,6 +14,12 @@ from datetime import datetime
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+# Import our new HTML fetcher if available
+try:
+    from youtube_html_fetcher import YouTubeHTMLTranscriptFetcher
+except ImportError:
+    print("WARNING: youtube_html_fetcher not found. HTML extraction method will be unavailable.")
+
 class YouTubeTranscriptFetcher:
     def __init__(self):
         """Initialize the YouTube transcript fetcher with multiple approaches"""
@@ -23,6 +29,13 @@ class YouTubeTranscriptFetcher:
         
         # Create a session with retry mechanism
         self.session = self._create_session()
+        
+        # Create an instance of the HTML fetcher if available
+        self.html_fetcher = None
+        try:
+            self.html_fetcher = YouTubeHTMLTranscriptFetcher()
+        except (NameError, ImportError):
+            print("HTML fetcher not available, will use other methods")
         
         # Track errors for debugging
         self.errors = []
@@ -52,6 +65,10 @@ class YouTubeTranscriptFetcher:
     
     def extract_video_id(self, url: str) -> Optional[str]:
         """Extract YouTube video ID from various URL formats"""
+        if self.html_fetcher:
+            return self.html_fetcher.extract_video_id(url)
+            
+        # Fallback implementation if HTML fetcher not available
         if not url:
             return None
         
@@ -88,6 +105,8 @@ class YouTubeTranscriptFetcher:
         # Try multiple methods in sequence
         transcript = None
         methods = [
+            # New HTML method is now our first choice
+            self._method_html,
             self._method_direct_timedtext,
             self._method_direct_timedtext_asr, 
             self._method_invidious,
@@ -131,6 +150,14 @@ class YouTubeTranscriptFetcher:
             "isUnavailableMessage": True,
             "errorDetails": error_details
         }]
+    
+    def _method_html(self, video_id: str, language: str) -> List[Dict[str, Any]]:
+        """Try to get transcript using the HTML extraction method"""
+        if not self.html_fetcher:
+            print("HTML fetcher not available, skipping method")
+            return None
+            
+        return self.html_fetcher.get_transcript(video_id, language)
     
     def _method_direct_timedtext(self, video_id: str, language: str) -> List[Dict[str, Any]]:
         """Try to get transcript using YouTube's timedtext API"""
