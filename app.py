@@ -14,8 +14,15 @@ CORS(app)  # Enable CORS for all routes
 crawler = YouTubeTranscriptCrawler()
 
 @app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
+def health_check_root():
+    """Health check endpoint at root path"""
+    return jsonify({
+        "status": "ok"
+    })
+
+@app.route('/api/health', methods=['GET'])
+def health_check_api():
+    """Health check endpoint at /api/health path for Render"""
     return jsonify({
         "status": "ok"
     })
