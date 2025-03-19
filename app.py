@@ -3,7 +3,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import traceback
-import asyncio
 from youtube_transcript_crawler import YouTubeTranscriptCrawler
 
 # Initialize Flask app
