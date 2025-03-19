@@ -1,246 +1,275 @@
 # youtube_transcript_crawler.py
-import re
 import asyncio
 import json
-from typing import List, Dict, Optional, Any
-from crawl4ai import AsyncWebCrawler
+import re
+from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 
-class YouTubeTranscriptCrawler:
-    """A YouTube transcript extractor that crawls the page HTML using crawl4ai."""
+async def crawl_youtube_video(video_url):
+    """
+    Crawl a YouTube video page and attempt to extract the transcript.
     
-    def extract_video_id(self, url: str) -> Optional[str]:
-        """Extract YouTube video ID from various URL formats."""
-        if not url:
-            return None
-        
-        # Standard YouTube URL format
-        standard_pattern = r'^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*)'
-        match = re.search(standard_pattern, url)
-        if match and match.group(7) and len(match.group(7)) == 11:
-            return match.group(7)
-        
-        # YouTube Shorts format
-        shorts_pattern = r'^.*((youtube.com\/shorts\/)([^#&?]*))'
-        match = re.search(shorts_pattern, url)
-        if match and match.group(3):
-            return match.group(3)
-        
-        # If the input is just the video ID
-        if re.match(r'^[A-Za-z0-9_-]{11}$', url):
-            return url
-            
+    Args:
+        video_url: URL of the YouTube video
+    """
+    print(f"Starting crawl of {video_url}...")
+    
+    # Validate YouTube URL
+    if not is_valid_youtube_url(video_url):
+        print("Error: Invalid YouTube URL. Please provide a valid YouTube video URL.")
         return None
     
-    async def get_transcript_async(self, video_id_or_url: str) -> List[Dict[str, Any]]:
-        """
-        Get transcript by extracting it from YouTube page HTML.
+    try:
+        # Use a simpler browser config without wait_until
+        browser_config = {
+            "timeout": 60000,              # 60 second timeout
+            "js_enabled": True             # Enable JavaScript
+        }
         
-        Args:
-            video_id_or_url: YouTube video ID or URL
+        # Custom JavaScript to attempt to extract transcript data
+        js_to_execute = """
+        async function extractTranscript() {
+            console.log("Attempting to extract YouTube transcript...");
             
-        Returns:
-            List of transcript segments
-        """
-        # Extract video ID if URL was provided
-        video_id = self.extract_video_id(video_id_or_url)
-        if not video_id:
-            return self._error_response("Invalid YouTube URL or video ID")
-        
-        # Construct the YouTube URL
-        youtube_url = f"https://www.youtube.com/watch?v={video_id}"
-        
-        try:
-            # Create extraction JS that looks for transcript data in the page HTML
-            extraction_js = """
-            async function extractTranscript() {
-                console.log("Starting transcript extraction from page HTML");
+            try {
+                // Method 1: Check if transcript data is in the page source
+                const htmlContent = document.documentElement.outerHTML;
+                let transcriptData = [];
                 
-                try {
-                    // Method 1: Try to find transcript data in the raw HTML
-                    const htmlContent = document.documentElement.outerHTML;
+                // Look for transcript segments in the page
+                const transcriptItems = document.querySelectorAll('ytd-transcript-segment-renderer');
+                
+                if (transcriptItems && transcriptItems.length > 0) {
+                    console.log(`Found ${transcriptItems.length} transcript segments in the DOM`);
                     
-                    // Look for transcript in initial data
-                    let transcriptData = [];
-                    
-                    // Pattern to find transcript data in window.ytInitialData
-                    const transcriptPattern = /"cueGroups":\s*(\[\{.+?\}\])/;
-                    const matches = htmlContent.match(transcriptPattern);
-                    
-                    if (matches && matches[1]) {
-                        console.log("Found potential transcript data");
+                    // Extract text and timestamps from each segment
+                    transcriptItems.forEach(item => {
+                        const timeEl = item.querySelector('.segment-timestamp');
+                        const textEl = item.querySelector('.segment-text');
                         
-                        try {
-                            // The regex match might not be perfect JSON, so we'll try to fix it
-                            let jsonStr = matches[1]
-                                .replace(/\\\\"/g, '"')
-                                .replace(/\\"/g, '"')
-                                .replace(/\\n/g, ' ');
-                            
-                            // Replace any other escaped characters
-                            jsonStr = jsonStr.replace(/\\\\u([0-9a-fA-F]{4})/g, (match, p1) => {
-                                return String.fromCharCode(parseInt(p1, 16));
+                        if (timeEl && textEl) {
+                            transcriptData.push({
+                                time: timeEl.textContent.trim(),
+                                text: textEl.textContent.trim()
                             });
-                            
-                            // Try to parse as JSON
-                            const cueGroups = JSON.parse(jsonStr);
-                            
-                            if (Array.isArray(cueGroups)) {
-                                console.log(`Found ${cueGroups.length} cue groups`);
-                                
-                                // Extract transcript from cueGroups structure
-                                cueGroups.forEach(group => {
-                                    if (group.cues) {
-                                        group.cues.forEach(cue => {
-                                            if (cue.startTimeMs && cue.durationMs && cue.cue && cue.cue.simpleText) {
-                                                transcriptData.push({
-                                                    text: cue.cue.simpleText,
-                                                    start: cue.startTimeMs / 1000,
-                                                    duration: cue.durationMs / 1000
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        } catch (parseError) {
-                            console.error("Error parsing transcript data:", parseError);
                         }
-                    }
+                    });
+                } else {
+                    console.log("No transcript segments found in the DOM");
                     
-                    if (transcriptData.length > 0) {
-                        console.log(`Extracted ${transcriptData.length} transcript segments from initial data`);
-                        return { transcript: transcriptData };
-                    }
-                    
-                    // Method 2: Click on transcript button and extract from panel
-                    console.log("Trying to access transcript panel");
-                    
-                    // Try to find and click the "..." menu button
+                    // Method 2: Try to find transcript button and click it
                     const moreActionsButton = document.querySelector('button[aria-label="More actions"]');
                     if (moreActionsButton) {
+                        console.log("Found more actions button, clicking it");
                         moreActionsButton.click();
-                        console.log("Clicked more actions button");
                         
                         // Wait for menu to appear
                         await new Promise(resolve => setTimeout(resolve, 1000));
                         
                         // Look for "Show transcript" menu item
-                        const menuItems = document.querySelectorAll('tp-yt-paper-item');
-                        let foundTranscriptItem = false;
+                        const menuItems = document.querySelectorAll('tp-yt-paper-item, ytd-menu-service-item-renderer');
+                        let foundTranscriptButton = false;
                         
                         for (const item of menuItems) {
                             const text = item.textContent.trim();
                             if (text.includes('transcript') || text.includes('Transcript')) {
+                                console.log("Found show transcript option, clicking it");
                                 item.click();
-                                foundTranscriptItem = true;
-                                console.log("Clicked show transcript");
+                                foundTranscriptButton = true;
+                                
+                                // Wait for transcript panel to load
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                
+                                // Now try to find transcript segments
+                                const segments = document.querySelectorAll('ytd-transcript-segment-renderer');
+                                console.log(`After clicking, found ${segments.length} transcript segments`);
+                                
+                                if (segments.length > 0) {
+                                    segments.forEach(segment => {
+                                        const timeEl = segment.querySelector('.segment-timestamp');
+                                        const textEl = segment.querySelector('.segment-text');
+                                        
+                                        if (timeEl && textEl) {
+                                            transcriptData.push({
+                                                time: timeEl.textContent.trim(),
+                                                text: textEl.textContent.trim()
+                                            });
+                                        }
+                                    });
+                                }
                                 break;
                             }
                         }
                         
-                        if (foundTranscriptItem) {
-                            // Wait for transcript panel to load
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                            
-                            // Try to find transcript segments
-                            const segmentItems = document.querySelectorAll('ytd-transcript-segment-renderer');
-                            
-                            if (segmentItems.length > 0) {
-                                console.log(`Found ${segmentItems.length} transcript segments in panel`);
-                                
-                                // Extract segments
-                                const segments = [];
-                                
-                                segmentItems.forEach(item => {
-                                    const timeEl = item.querySelector('.segment-timestamp');
-                                    const textEl = item.querySelector('.segment-text');
-                                    
-                                    if (timeEl && textEl) {
-                                        // Parse timestamp (format: MM:SS)
-                                        const timeStr = timeEl.textContent.trim();
-                                        let seconds = 0;
-                                        
-                                        if (timeStr.includes(':')) {
-                                            const [mins, secs] = timeStr.split(':').map(part => parseFloat(part));
-                                            seconds = mins * 60 + secs;
-                                        }
-                                        
-                                        segments.push({
-                                            text: textEl.textContent.trim(),
-                                            start: seconds,
-                                            duration: 2.0 // Default duration
-                                        });
-                                    }
-                                });
-                                
-                                // Calculate durations based on consecutive start times
-                                for (let i = 0; i < segments.length - 1; i++) {
-                                    segments[i].duration = segments[i+1].start - segments[i].start;
-                                }
-                                
-                                if (segments.length > 0) {
-                                    return { transcript: segments };
-                                }
-                            }
+                        if (!foundTranscriptButton) {
+                            console.log("Could not find the transcript option in the menu");
                         }
+                    } else {
+                        console.log("Could not find the more actions button");
                     }
-                    
-                    return { error: "Could not find transcript data in page", transcript: [] };
-                    
-                } catch (error) {
-                    console.error("Error extracting transcript:", error);
-                    return { 
-                        error: error.message || "Unknown error extracting transcript",
-                        transcript: []
-                    };
                 }
-            }
-            
-            return await extractTranscript();
-            """
-            
-            # Create crawler instance
-            async with AsyncWebCrawler() as crawler:
-                # Run the crawler with extraction script
-                result = await crawler.arun(
-                    url=youtube_url,
-                    js_to_execute=extraction_js,
-                    # Make sure JavaScript is enabled
-                    browser_config={
-                        "wait_until": "networkidle2",
-                        "timeout": 60000,
-                        "js_enabled": True
+                
+                // Method 3: Look for transcript data in the page source
+                const transcriptPattern = /"playerCaptionsTracklistRenderer":(.+?)"captionTracks":(\\[\\{.+?\\}\\])/;
+                const matches = htmlContent.match(transcriptPattern);
+                
+                if (matches && matches[1] && transcriptData.length === 0) {
+                    console.log("Found potential transcript data in page source");
+                    try {
+                        const captionTracks = JSON.parse(matches[1]);
+                        if (captionTracks && captionTracks.length > 0) {
+                            // This only gives us the URL to the transcript, not the actual text
+                            // We would need to make additional requests to get the full transcript
+                            return { 
+                                transcriptData,
+                                captionTracks,
+                                videoTitle: document.title,
+                                videoId: new URLSearchParams(window.location.search).get('v')
+                            };
+                        }
+                    } catch (e) {
+                        console.log("Error parsing caption tracks:", e);
                     }
-                )
+                }
                 
-                # Check if extraction was successful
-                if not result or not hasattr(result, 'custom_data'):
-                    return self._error_response("Failed to extract data from YouTube page")
+                return { 
+                    transcriptData,
+                    videoTitle: document.title,
+                    videoId: new URLSearchParams(window.location.search).get('v')
+                };
+            } catch (error) {
+                console.error("Error in transcript extraction:", error);
+                return { error: error.toString() };
+            }
+        }
+        
+        return await extractTranscript();
+        """
+        
+        # Run the crawler
+        async with AsyncWebCrawler() as crawler:
+            result = await crawler.arun(
+                url=video_url,
+                js_to_execute=js_to_execute,
+                browser_config=browser_config,
+                verbose=True
+            )
+            
+            print("\n=== Crawl Completed ===")
+            
+            # Display basic information
+            print(f"URL: {result.url}")
+            
+            # Check for custom data from JavaScript execution
+            if hasattr(result, 'custom_data') and result.custom_data:
+                print("\n=== Video Information ===")
+                video_title = result.custom_data.get('videoTitle', 'Unknown title')
+                video_id = result.custom_data.get('videoId', 'Unknown ID')
+                print(f"Title: {video_title}")
+                print(f"Video ID: {video_id}")
                 
-                # Parse the transcript data
-                custom_data = result.custom_data
-                if not custom_data:
-                    return self._error_response("No custom data returned from extraction")
-                
-                transcript_data = custom_data.get('transcript', [])
-                if not transcript_data:
-                    error_msg = custom_data.get('error', "No transcript found")
-                    return self._error_response(error_msg)
-                
-                return transcript_data
-                
-        except Exception as e:
-            return self._error_response(f"Error during extraction: {str(e)}")
+                # Check for transcript data
+                transcript_data = result.custom_data.get('transcriptData', [])
+                if transcript_data and len(transcript_data) > 0:
+                    print(f"\n=== Transcript ({len(transcript_data)} segments) ===")
+                    for i, segment in enumerate(transcript_data[:5]):  # Print first 5 segments
+                        print(f"{segment.get('time', '??:??')} - {segment.get('text', 'No text')}")
+                    if len(transcript_data) > 5:
+                        print(f"... and {len(transcript_data) - 5} more segments")
+                    
+                    # Save transcript
+                    save_transcript(video_id, video_title, transcript_data)
+                else:
+                    print("\nNo transcript data found in the page.")
+                    
+                    # Check if we have caption tracks
+                    caption_tracks = result.custom_data.get('captionTracks', [])
+                    if caption_tracks and len(caption_tracks) > 0:
+                        print(f"\nFound {len(caption_tracks)} caption tracks, but could not extract direct transcript.")
+                        for i, track in enumerate(caption_tracks):
+                            base_url = track.get('baseUrl', 'No URL')
+                            lang = track.get('languageCode', 'unknown')
+                            print(f"Track {i+1}: Language {lang}")
+            else:
+                print("No custom data returned from JavaScript execution.")
+            
+            # Basic metadata
+            if hasattr(result, 'metadata') and result.metadata:
+                print("\n=== Page Metadata ===")
+                for key in ['title', 'description', 'og:title', 'og:description']:
+                    if key in result.metadata:
+                        print(f"{key}: {result.metadata[key]}")
+            
+            return result
     
-    def get_transcript(self, video_id_or_url: str) -> List[Dict[str, Any]]:
-        """Synchronous wrapper for get_transcript_async."""
-        return asyncio.run(self.get_transcript_async(video_id_or_url))
+    except Exception as e:
+        print(f"Error during crawling: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def is_valid_youtube_url(url):
+    """Check if a URL is a valid YouTube video URL."""
+    youtube_regex = r'^(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)([a-zA-Z0-9_-]{11})'
+    return re.match(youtube_regex, url) is not None
+
+def save_transcript(video_id, video_title, transcript_data, output_file=None):
+    """Save the transcript data to a file."""
+    if not output_file:
+        # Remove special characters from title for filename
+        safe_title = re.sub(r'[^\w\s-]', '', video_title)
+        safe_title = re.sub(r'[\s]+', '_', safe_title)
+        output_file = f"transcript_{video_id}_{safe_title[:30]}.txt"
     
-    def _error_response(self, message: str) -> List[Dict[str, Any]]:
-        """Create a standardized error response."""
-        return [{
-            "text": message,
-            "start": 0,
-            "duration": 0,
-            "error": True
-        }]
+    try:
+        # Save as text file
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(f"Transcript for: {video_title}\n")
+            f.write(f"Video ID: {video_id}\n\n")
+            
+            for segment in transcript_data:
+                f.write(f"{segment.get('time', '??:??')} - {segment.get('text', '')}\n")
+        
+        print(f"\nTranscript saved to {output_file}")
+        
+        # Also save as JSON
+        json_file = output_file.replace(".txt", ".json")
+        with open(json_file, "w", encoding="utf-8") as f:
+            json.dump({
+                "videoId": video_id,
+                "videoTitle": video_title,
+                "transcript": transcript_data
+            }, f, indent=2)
+        
+        print(f"Transcript also saved as JSON to {json_file}")
+        
+    except Exception as e:
+        print(f"Error saving transcript: {str(e)}")
+
+def main():
+    """Run the crawler with command line arguments."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="YouTube Transcript Crawler")
+    parser.add_argument("--url", required=True, help="YouTube video URL")
+    parser.add_argument("--output", help="Output file for transcript (optional)")
+    
+    args = parser.parse_args()
+    
+    # Run the crawl
+    result = asyncio.run(crawl_youtube_video(args.url))
+    
+    if result and hasattr(result, 'custom_data') and args.output:
+        # Save with custom filename if provided
+        transcript_data = result.custom_data.get('transcriptData', [])
+        video_id = result.custom_data.get('videoId', 'unknown')
+        video_title = result.custom_data.get('videoTitle', 'Untitled')
+        save_transcript(video_id, video_title, transcript_data, args.output)
+
+if __name__ == "__main__":
+    import sys
+    
+    if len(sys.argv) < 2:
+        print("Usage: python youtube_transcript_crawler.py --url YOUTUBE_URL [--output OUTPUT_FILE]")
+        sys.exit(1)
+    
+    main()

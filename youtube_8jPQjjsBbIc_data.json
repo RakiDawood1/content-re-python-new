@@ -1,0 +1,1323 @@
+{
+  "video_id": "8jPQjjsBbIc",
+  "video_url": "https://www.youtube.com/watch?v=8jPQjjsBbIc",
+  "metadata": {
+    "title": "How to stay calm when you know you'll be stressed | Daniel Levitin | TED - YouTube",
+    "description": "Visit http://TED.com to get our entire library of TED Talks, transcripts, translations, personalized talk recommendations and more.You're not at your best wh...",
+    "author": null,
+    "og:title": "How to stay calm when you know you'll be stressed | Daniel Levitin | TED",
+    "og:description": "Visit http://TED.com to get our entire library of TED Talks, transcripts, translations, personalized talk recommendations and more.You're not at your best wh...",
+    "og:image": "https://i.ytimg.com/vi/8jPQjjsBbIc/maxresdefault.jpg",
+    "og:video:tag": "stress",
+    "channel": "TED",
+    "views": 18057616,
+    "publish_date": "2015-11-23T08:58:55-08:00"
+  },
+  "transcript": {
+    "success": true,
+    "language": "English",
+    "is_generated": false,
+    "segments": [
+      {
+        "text": "A few years ago,\nI broke into my own house.",
+        "start": 13.24,
+        "duration": 2.56
+      },
+      {
+        "text": "I had just driven home,",
+        "start": 16.88,
+        "duration": 1.216
+      },
+      {
+        "text": "it was around midnight\nin the dead of Montreal winter,",
+        "start": 18.12,
+        "duration": 2.536
+      },
+      {
+        "text": "I had been visiting my friend,\nJeff, across town,",
+        "start": 20.68,
+        "duration": 2.296
+      },
+      {
+        "text": "and the thermometer on the front porch\nread minus 40 degrees --",
+        "start": 23.0,
+        "duration": 4.776
+      },
+      {
+        "text": "and don't bother asking\nif that's Celsius or Fahrenheit,",
+        "start": 27.8,
+        "duration": 3.096
+      },
+      {
+        "text": "minus 40 is where the two scales meet --",
+        "start": 30.92,
+        "duration": 2.456
+      },
+      {
+        "text": "it was very cold.",
+        "start": 33.4,
+        "duration": 1.256
+      },
+      {
+        "text": "And as I stood on the front porch\nfumbling in my pockets,",
+        "start": 34.68,
+        "duration": 3.216
+      },
+      {
+        "text": "I found I didn't have my keys.",
+        "start": 37.92,
+        "duration": 2.256
+      },
+      {
+        "text": "In fact, I could see them\nthrough the window,",
+        "start": 40.2,
+        "duration": 2.096
+      },
+      {
+        "text": "lying on the dining room table\nwhere I had left them.",
+        "start": 42.32,
+        "duration": 3.096
+      },
+      {
+        "text": "So I quickly ran around\nand tried all the other doors and windows,",
+        "start": 45.44,
+        "duration": 3.136
+      },
+      {
+        "text": "and they were locked tight.",
+        "start": 48.6,
+        "duration": 1.576
+      },
+      {
+        "text": "I thought about calling a locksmith --\nat least I had my cellphone,",
+        "start": 50.2,
+        "duration": 3.143
+      },
+      {
+        "text": "but at midnight, it could take a while\nfor a locksmith to show up,",
+        "start": 53.367,
+        "duration": 3.329
+      },
+      {
+        "text": "and it was cold.",
+        "start": 56.72,
+        "duration": 2.16
+      },
+      {
+        "text": "I couldn't go back to my friend\nJeff's house for the night",
+        "start": 60.421,
+        "duration": 2.715
+      },
+      {
+        "text": "because I had an early flight\nto Europe the next morning,",
+        "start": 63.16,
+        "duration": 2.667
+      },
+      {
+        "text": "and I needed to get\nmy passport and my suitcase.",
+        "start": 65.851,
+        "duration": 2.239
+      },
+      {
+        "text": "So, desperate and freezing cold,",
+        "start": 68.4,
+        "duration": 2.496
+      },
+      {
+        "text": "I found a large rock and I broke\nthrough the basement window,",
+        "start": 70.92,
+        "duration": 3.616
+      },
+      {
+        "text": "cleared out the shards of glass,",
+        "start": 74.56,
+        "duration": 1.976
+      },
+      {
+        "text": "I crawled through,",
+        "start": 76.56,
+        "duration": 1.336
+      },
+      {
+        "text": "I found a piece of cardboard\nand taped it up over the opening,",
+        "start": 77.92,
+        "duration": 3.416
+      },
+      {
+        "text": "figuring that in the morning,\non the way to the airport,",
+        "start": 81.36,
+        "duration": 2.62
+      },
+      {
+        "text": "I could call my contractor\nand ask him to fix it.",
+        "start": 84.004,
+        "duration": 2.772
+      },
+      {
+        "text": "This was going to be expensive,",
+        "start": 86.8,
+        "duration": 1.477
+      },
+      {
+        "text": "but probably no more expensive\nthan a middle-of-the-night locksmith,",
+        "start": 88.301,
+        "duration": 3.555
+      },
+      {
+        "text": "so I figured, under the circumstances,\nI was coming out even.",
+        "start": 91.88,
+        "duration": 4.16
+      },
+      {
+        "text": "Now, I'm a neuroscientist by training",
+        "start": 96.92,
+        "duration": 2.176
+      },
+      {
+        "text": "and I know a little bit\nabout how the brain performs under stress.",
+        "start": 99.12,
+        "duration": 4.096
+      },
+      {
+        "text": "It releases cortisol\nthat raises your heart rate,",
+        "start": 103.24,
+        "duration": 3.536
+      },
+      {
+        "text": "it modulates adrenaline levels",
+        "start": 106.8,
+        "duration": 2.256
+      },
+      {
+        "text": "and it clouds your thinking.",
+        "start": 109.08,
+        "duration": 1.48
+      },
+      {
+        "text": "So the next morning,",
+        "start": 111.08,
+        "duration": 1.976
+      },
+      {
+        "text": "when I woke up on too little sleep,",
+        "start": 113.08,
+        "duration": 2.456
+      },
+      {
+        "text": "worrying about the hole in the window,",
+        "start": 115.56,
+        "duration": 2.736
+      },
+      {
+        "text": "and a mental note\nthat I had to call my contractor,",
+        "start": 118.32,
+        "duration": 2.776
+      },
+      {
+        "text": "and the freezing temperatures,",
+        "start": 121.12,
+        "duration": 1.696
+      },
+      {
+        "text": "and the meetings I had upcoming in Europe,",
+        "start": 122.84,
+        "duration": 2.456
+      },
+      {
+        "text": "and, you know, with all\nthe cortisol in my brain,",
+        "start": 125.32,
+        "duration": 3.536
+      },
+      {
+        "text": "my thinking was cloudy,",
+        "start": 128.88,
+        "duration": 1.376
+      },
+      {
+        "text": "but I didn't know it was cloudy\nbecause my thinking was cloudy.",
+        "start": 130.28,
+        "duration": 3.416
+      },
+      {
+        "text": "(Laughter)",
+        "start": 133.72,
+        "duration": 1.496
+      },
+      {
+        "text": "And it wasn't until I got\nto the airport check-in counter,",
+        "start": 135.24,
+        "duration": 3.256
+      },
+      {
+        "text": "that I realized I didn't have my passport.",
+        "start": 138.52,
+        "duration": 2.256
+      },
+      {
+        "text": "(Laughter)",
+        "start": 140.8,
+        "duration": 2.016
+      },
+      {
+        "text": "So I raced home in the snow\nand ice, 40 minutes,",
+        "start": 142.84,
+        "duration": 3.456
+      },
+      {
+        "text": "got my passport,\nraced back to the airport,",
+        "start": 146.32,
+        "duration": 2.456
+      },
+      {
+        "text": "I made it just in time,",
+        "start": 148.8,
+        "duration": 1.816
+      },
+      {
+        "text": "but they had given away\nmy seat to someone else,",
+        "start": 150.64,
+        "duration": 2.239
+      },
+      {
+        "text": "so I got stuck in the back of the plane,\nnext to the bathrooms,",
+        "start": 152.903,
+        "duration": 2.976
+      },
+      {
+        "text": "in a seat that wouldn't recline,\non an eight-hour flight.",
+        "start": 155.903,
+        "duration": 3.217
+      },
+      {
+        "text": "Well, I had a lot of time to think\nduring those eight hours and no sleep.",
+        "start": 159.88,
+        "duration": 3.456
+      },
+      {
+        "text": "(Laughter)",
+        "start": 163.36,
+        "duration": 1.136
+      },
+      {
+        "text": "And I started wondering,\nare there things that I can do,",
+        "start": 164.52,
+        "duration": 2.656
+      },
+      {
+        "text": "systems that I can put into place,",
+        "start": 167.2,
+        "duration": 1.936
+      },
+      {
+        "text": "that will prevent bad things\nfrom happening?",
+        "start": 169.16,
+        "duration": 2.456
+      },
+      {
+        "text": "Or at least if bad things happen,",
+        "start": 171.64,
+        "duration": 1.896
+      },
+      {
+        "text": "will minimize the likelihood\nof it being a total catastrophe.",
+        "start": 173.56,
+        "duration": 5.0
+      },
+      {
+        "text": "So I started thinking about that,",
+        "start": 179.36,
+        "duration": 1.576
+      },
+      {
+        "text": "but my thoughts didn't crystallize\nuntil about a month later.",
+        "start": 180.96,
+        "duration": 2.858
+      },
+      {
+        "text": "I was having dinner with my colleague,\nDanny Kahneman, the Nobel Prize winner,",
+        "start": 183.842,
+        "duration": 3.694
+      },
+      {
+        "text": "and I somewhat embarrassedly told him\nabout having broken my window,",
+        "start": 187.56,
+        "duration": 3.376
+      },
+      {
+        "text": "and, you know, forgotten my passport,",
+        "start": 190.96,
+        "duration": 2.416
+      },
+      {
+        "text": "and Danny shared with me",
+        "start": 193.4,
+        "duration": 1.216
+      },
+      {
+        "text": "that he'd been practicing\nsomething called prospective hindsight.",
+        "start": 194.64,
+        "duration": 4.496
+      },
+      {
+        "text": "(Laughter)",
+        "start": 199.16,
+        "duration": 1.736
+      },
+      {
+        "text": "It's something that he had gotten\nfrom the psychologist Gary Klein,",
+        "start": 200.92,
+        "duration": 3.143
+      },
+      {
+        "text": "who had written about it\na few years before,",
+        "start": 204.087,
+        "duration": 2.049
+      },
+      {
+        "text": "also called the pre-mortem.",
+        "start": 206.16,
+        "duration": 2.096
+      },
+      {
+        "text": "Now, you all know what the postmortem is.",
+        "start": 208.28,
+        "duration": 1.953
+      },
+      {
+        "text": "Whenever there's a disaster,",
+        "start": 210.257,
+        "duration": 1.479
+      },
+      {
+        "text": "a team of experts come in and they try\nto figure out what went wrong, right?",
+        "start": 211.76,
+        "duration": 4.296
+      },
+      {
+        "text": "Well, in the pre-mortem, Danny explained,",
+        "start": 216.08,
+        "duration": 2.416
+      },
+      {
+        "text": "you look ahead and you try to figure out\nall the things that could go wrong,",
+        "start": 218.52,
+        "duration": 3.896
+      },
+      {
+        "text": "and then you try to figure out\nwhat you can do",
+        "start": 222.44,
+        "duration": 2.576
+      },
+      {
+        "text": "to prevent those things from happening,\nor to minimize the damage.",
+        "start": 225.04,
+        "duration": 3.496
+      },
+      {
+        "text": "So what I want to talk to you about today",
+        "start": 228.56,
+        "duration": 2.936
+      },
+      {
+        "text": "are some of the things we can do\nin the form of a pre-mortem.",
+        "start": 231.52,
+        "duration": 3.536
+      },
+      {
+        "text": "Some of them are obvious,\nsome of them are not so obvious.",
+        "start": 235.08,
+        "duration": 2.896
+      },
+      {
+        "text": "I'll start with the obvious ones.",
+        "start": 238.0,
+        "duration": 1.936
+      },
+      {
+        "text": "Around the home, designate a place\nfor things that are easily lost.",
+        "start": 239.96,
+        "duration": 5.08
+      },
+      {
+        "text": "Now, this sounds\nlike common sense, and it is,",
+        "start": 245.68,
+        "duration": 3.856
+      },
+      {
+        "text": "but there's a lot of science\nto back this up,",
+        "start": 249.56,
+        "duration": 2.536
+      },
+      {
+        "text": "based on the way our spatial memory works.",
+        "start": 252.12,
+        "duration": 3.296
+      },
+      {
+        "text": "There's a structure in the brain\ncalled the hippocampus,",
+        "start": 255.44,
+        "duration": 2.856
+      },
+      {
+        "text": "that evolved over tens\nof thousands of years,",
+        "start": 258.32,
+        "duration": 2.936
+      },
+      {
+        "text": "to keep track of the locations\nof important things --",
+        "start": 261.28,
+        "duration": 3.776
+      },
+      {
+        "text": "where the well is,\nwhere fish can be found,",
+        "start": 265.08,
+        "duration": 2.416
+      },
+      {
+        "text": "that stand of fruit trees,",
+        "start": 267.52,
+        "duration": 2.496
+      },
+      {
+        "text": "where the friendly and enemy tribes live.",
+        "start": 270.04,
+        "duration": 2.616
+      },
+      {
+        "text": "The hippocampus is the part of the brain",
+        "start": 272.68,
+        "duration": 1.905
+      },
+      {
+        "text": "that in London taxicab drivers\nbecomes enlarged.",
+        "start": 274.609,
+        "duration": 3.487
+      },
+      {
+        "text": "It's the part of the brain\nthat allows squirrels to find their nuts.",
+        "start": 278.12,
+        "duration": 3.696
+      },
+      {
+        "text": "And if you're wondering,\nsomebody actually did the experiment",
+        "start": 281.84,
+        "duration": 2.858
+      },
+      {
+        "text": "where they cut off\nthe olfactory sense of the squirrels,",
+        "start": 284.722,
+        "duration": 2.774
+      },
+      {
+        "text": "and they could still find their nuts.",
+        "start": 287.52,
+        "duration": 1.816
+      },
+      {
+        "text": "They weren't using smell,\nthey were using the hippocampus,",
+        "start": 289.36,
+        "duration": 2.816
+      },
+      {
+        "text": "this exquisitely evolved mechanism\nin the brain for finding things.",
+        "start": 292.2,
+        "duration": 5.016
+      },
+      {
+        "text": "But it's really good for things\nthat don't move around much,",
+        "start": 297.24,
+        "duration": 3.736
+      },
+      {
+        "text": "not so good for things that move around.",
+        "start": 301.0,
+        "duration": 2.456
+      },
+      {
+        "text": "So this is why we lose car keys\nand reading glasses and passports.",
+        "start": 303.48,
+        "duration": 4.296
+      },
+      {
+        "text": "So in the home,\ndesignate a spot for your keys --",
+        "start": 307.8,
+        "duration": 2.496
+      },
+      {
+        "text": "a hook by the door,\nmaybe a decorative bowl.",
+        "start": 310.32,
+        "duration": 2.856
+      },
+      {
+        "text": "For your passport, a particular drawer.",
+        "start": 313.2,
+        "duration": 2.096
+      },
+      {
+        "text": "For your reading glasses,\na particular table.",
+        "start": 315.32,
+        "duration": 2.776
+      },
+      {
+        "text": "If you designate a spot\nand you're scrupulous about it,",
+        "start": 318.12,
+        "duration": 3.456
+      },
+      {
+        "text": "your things will always be there\nwhen you look for them.",
+        "start": 321.6,
+        "duration": 2.816
+      },
+      {
+        "text": "What about travel?",
+        "start": 324.44,
+        "duration": 1.216
+      },
+      {
+        "text": "Take a cell phone picture\nof your credit cards,",
+        "start": 325.68,
+        "duration": 2.376
+      },
+      {
+        "text": "your driver's license, your passport,",
+        "start": 328.08,
+        "duration": 2.296
+      },
+      {
+        "text": "mail it to yourself so it's in the cloud.",
+        "start": 330.4,
+        "duration": 2.256
+      },
+      {
+        "text": "If these things are lost or stolen,\nyou can facilitate replacement.",
+        "start": 332.68,
+        "duration": 4.376
+      },
+      {
+        "text": "Now these are some rather obvious things.",
+        "start": 337.08,
+        "duration": 2.616
+      },
+      {
+        "text": "Remember, when you're under stress,\nthe brain releases cortisol.",
+        "start": 339.72,
+        "duration": 3.536
+      },
+      {
+        "text": "Cortisol is toxic,\nand it causes cloudy thinking.",
+        "start": 343.28,
+        "duration": 3.216
+      },
+      {
+        "text": "So part of the practice of the pre-mortem",
+        "start": 346.52,
+        "duration": 2.536
+      },
+      {
+        "text": "is to recognize that under stress\nyou're not going to be at your best,",
+        "start": 349.08,
+        "duration": 4.256
+      },
+      {
+        "text": "and you should put systems in place.",
+        "start": 353.36,
+        "duration": 2.296
+      },
+      {
+        "text": "And there's perhaps\nno more stressful a situation",
+        "start": 355.68,
+        "duration": 2.936
+      },
+      {
+        "text": "than when you're confronted\nwith a medical decision to make.",
+        "start": 358.64,
+        "duration": 3.416
+      },
+      {
+        "text": "And at some point, all of us\nare going to be in that position,",
+        "start": 362.08,
+        "duration": 3.296
+      },
+      {
+        "text": "where we have to make\na very important decision",
+        "start": 365.4,
+        "duration": 2.376
+      },
+      {
+        "text": "about the future of our medical care\nor that of a loved one,",
+        "start": 367.8,
+        "duration": 3.296
+      },
+      {
+        "text": "to help them with a decision.",
+        "start": 371.12,
+        "duration": 1.656
+      },
+      {
+        "text": "And so I want to talk about that.",
+        "start": 372.8,
+        "duration": 1.616
+      },
+      {
+        "text": "And I'm going to talk about\na very particular medical condition.",
+        "start": 374.44,
+        "duration": 3.016
+      },
+      {
+        "text": "But this stands as a proxy for all kinds\nof medical decision-making,",
+        "start": 377.48,
+        "duration": 3.536
+      },
+      {
+        "text": "and indeed for financial decision-making,\nand social decision-making --",
+        "start": 381.04,
+        "duration": 4.016
+      },
+      {
+        "text": "any kind of decision you have to make",
+        "start": 385.08,
+        "duration": 2.256
+      },
+      {
+        "text": "that would benefit from a rational\nassessment of the facts.",
+        "start": 387.36,
+        "duration": 4.016
+      },
+      {
+        "text": "So suppose you go to your doctor\nand the doctor says,",
+        "start": 391.4,
+        "duration": 3.136
+      },
+      {
+        "text": "\"I just got your lab work back,\nyour cholesterol's a little high.\"",
+        "start": 394.56,
+        "duration": 4.12
+      },
+      {
+        "text": "Now, you all know that high cholesterol",
+        "start": 399.24,
+        "duration": 3.016
+      },
+      {
+        "text": "is associated with an increased risk\nof cardiovascular disease,",
+        "start": 402.28,
+        "duration": 4.136
+      },
+      {
+        "text": "heart attack, stroke.",
+        "start": 406.44,
+        "duration": 1.416
+      },
+      {
+        "text": "And so you're thinking",
+        "start": 407.88,
+        "duration": 1.216
+      },
+      {
+        "text": "having high cholesterol\nisn't the best thing,",
+        "start": 409.12,
+        "duration": 2.096
+      },
+      {
+        "text": "and so the doctor says,\n\"You know, I'd like to give you a drug",
+        "start": 411.24,
+        "duration": 3.016
+      },
+      {
+        "text": "that will help you\nlower your cholesterol, a statin.\"",
+        "start": 414.28,
+        "duration": 2.776
+      },
+      {
+        "text": "And you've probably heard of statins,",
+        "start": 417.08,
+        "duration": 1.896
+      },
+      {
+        "text": "you know that they're among\nthe most widely prescribed drugs",
+        "start": 419.0,
+        "duration": 2.81
+      },
+      {
+        "text": "in the world today,",
+        "start": 421.834,
+        "duration": 1.174
+      },
+      {
+        "text": "you probably even know\npeople who take them.",
+        "start": 423.032,
+        "duration": 2.079
+      },
+      {
+        "text": "And so you're thinking,\n\"Yeah! Give me the statin.\"",
+        "start": 425.135,
+        "duration": 2.381
+      },
+      {
+        "text": "But there's a question\nyou should ask at this point,",
+        "start": 427.541,
+        "duration": 2.435
+      },
+      {
+        "text": "a statistic you should ask for",
+        "start": 430.0,
+        "duration": 1.856
+      },
+      {
+        "text": "that most doctors\ndon't like talking about,",
+        "start": 431.88,
+        "duration": 2.456
+      },
+      {
+        "text": "and pharmaceutical companies\nlike talking about even less.",
+        "start": 434.36,
+        "duration": 3.16
+      },
+      {
+        "text": "It's for the number needed to treat.",
+        "start": 438.8,
+        "duration": 2.376
+      },
+      {
+        "text": "Now, what is this, the NNT?",
+        "start": 441.2,
+        "duration": 1.976
+      },
+      {
+        "text": "It's the number of people\nthat need to take a drug",
+        "start": 443.2,
+        "duration": 3.056
+      },
+      {
+        "text": "or undergo a surgery\nor any medical procedure",
+        "start": 446.28,
+        "duration": 2.856
+      },
+      {
+        "text": "before one person is helped.",
+        "start": 449.16,
+        "duration": 2.376
+      },
+      {
+        "text": "And you're thinking,\nwhat kind of crazy statistic is that?",
+        "start": 451.56,
+        "duration": 2.856
+      },
+      {
+        "text": "The number should be one.",
+        "start": 454.44,
+        "duration": 1.216
+      },
+      {
+        "text": "My doctor wouldn't prescribe\nsomething to me",
+        "start": 455.68,
+        "duration": 2.056
+      },
+      {
+        "text": "if it's not going to help.",
+        "start": 457.76,
+        "duration": 1.285
+      },
+      {
+        "text": "But actually, medical practice\ndoesn't work that way.",
+        "start": 459.069,
+        "duration": 2.484
+      },
+      {
+        "text": "And it's not the doctor's fault,",
+        "start": 461.578,
+        "duration": 1.531
+      },
+      {
+        "text": "if it's anybody's fault,\nit's the fault of scientists like me.",
+        "start": 463.134,
+        "duration": 2.919
+      },
+      {
+        "text": "We haven't figured out\nthe underlying mechanisms well enough.",
+        "start": 466.077,
+        "duration": 2.865
+      },
+      {
+        "text": "But GlaxoSmithKline estimates",
+        "start": 468.966,
+        "duration": 2.41
+      },
+      {
+        "text": "that 90 percent of the drugs work\nin only 30 to 50 percent of the people.",
+        "start": 471.4,
+        "duration": 4.976
+      },
+      {
+        "text": "So the number needed to treat\nfor the most widely prescribed statin,",
+        "start": 476.4,
+        "duration": 3.816
+      },
+      {
+        "text": "what do you suppose it is?",
+        "start": 480.24,
+        "duration": 2.136
+      },
+      {
+        "text": "How many people have to take it\nbefore one person is helped?",
+        "start": 482.4,
+        "duration": 2.816
+      },
+      {
+        "text": "300.",
+        "start": 485.24,
+        "duration": 1.2
+      },
+      {
+        "text": "This is according to research",
+        "start": 487.075,
+        "duration": 1.381
+      },
+      {
+        "text": "by research practitioners\nJerome Groopman and Pamela Hartzband,",
+        "start": 488.48,
+        "duration": 3.496
+      },
+      {
+        "text": "independently confirmed by Bloomberg.com.",
+        "start": 492.0,
+        "duration": 2.776
+      },
+      {
+        "text": "I ran through the numbers myself.",
+        "start": 494.8,
+        "duration": 2.4
+      },
+      {
+        "text": "300 people have to\ntake the drug for a year",
+        "start": 497.92,
+        "duration": 2.376
+      },
+      {
+        "text": "before one heart attack, stroke\nor other adverse event is prevented.",
+        "start": 500.32,
+        "duration": 3.976
+      },
+      {
+        "text": "Now you're probably thinking,",
+        "start": 504.32,
+        "duration": 1.381
+      },
+      {
+        "text": "\"Well, OK, one in 300 chance\nof lowering my cholesterol.",
+        "start": 505.725,
+        "duration": 2.811
+      },
+      {
+        "text": "Why not, doc? Give me\nthe prescription anyway.\"",
+        "start": 508.56,
+        "duration": 2.216
+      },
+      {
+        "text": "But you should ask at this point\nfor another statistic,",
+        "start": 510.8,
+        "duration": 2.856
+      },
+      {
+        "text": "and that is, \"Tell me\nabout the side effects.\" Right?",
+        "start": 513.68,
+        "duration": 2.576
+      },
+      {
+        "text": "So for this particular drug,",
+        "start": 516.28,
+        "duration": 1.656
+      },
+      {
+        "text": "the side effects occur\nin five percent of the patients.",
+        "start": 517.96,
+        "duration": 3.656
+      },
+      {
+        "text": "And they include terrible things --",
+        "start": 521.64,
+        "duration": 1.667
+      },
+      {
+        "text": "debilitating muscle and joint pain,\ngastrointestinal distress --",
+        "start": 523.331,
+        "duration": 4.444
+      },
+      {
+        "text": "but now you're thinking, \"Five percent,",
+        "start": 527.799,
+        "duration": 1.859
+      },
+      {
+        "text": "not very likely\nit's going to happen to me,",
+        "start": 529.682,
+        "duration": 2.014
+      },
+      {
+        "text": "I'll still take the drug.\"",
+        "start": 531.72,
+        "duration": 1.238
+      },
+      {
+        "text": "But wait a minute.",
+        "start": 532.982,
+        "duration": 1.194
+      },
+      {
+        "text": "Remember under stress\nyou're not thinking clearly.",
+        "start": 534.2,
+        "duration": 2.336
+      },
+      {
+        "text": "So think about how you're going\nto work through this ahead of time,",
+        "start": 536.56,
+        "duration": 3.165
+      },
+      {
+        "text": "so you don't have to manufacture\nthe chain of reasoning on the spot.",
+        "start": 539.75,
+        "duration": 3.198
+      },
+      {
+        "text": "300 people take the drug, right?\nOne person's helped,",
+        "start": 542.973,
+        "duration": 2.492
+      },
+      {
+        "text": "five percent of those 300\nhave side effects,",
+        "start": 545.489,
+        "duration": 2.407
+      },
+      {
+        "text": "that's 15 people.",
+        "start": 547.92,
+        "duration": 1.48
+      },
+      {
+        "text": "You're 15 times more likely\nto be harmed by the drug",
+        "start": 549.8,
+        "duration": 3.896
+      },
+      {
+        "text": "than you are to be helped by the drug.",
+        "start": 553.72,
+        "duration": 2.816
+      },
+      {
+        "text": "Now, I'm not saying whether you\nshould take the statin or not.",
+        "start": 556.56,
+        "duration": 2.905
+      },
+      {
+        "text": "I'm just saying you should have\nthis conversation with your doctor.",
+        "start": 559.489,
+        "duration": 3.143
+      },
+      {
+        "text": "Medical ethics requires it,",
+        "start": 562.656,
+        "duration": 1.32
+      },
+      {
+        "text": "it's part of the principle\nof informed consent.",
+        "start": 564.0,
+        "duration": 2.296
+      },
+      {
+        "text": "You have the right to have access\nto this kind of information",
+        "start": 566.32,
+        "duration": 3.216
+      },
+      {
+        "text": "to begin the conversation about whether\nyou want to take the risks or not.",
+        "start": 569.56,
+        "duration": 3.896
+      },
+      {
+        "text": "Now you might be thinking",
+        "start": 573.48,
+        "duration": 1.216
+      },
+      {
+        "text": "I've pulled this number\nout of the air for shock value,",
+        "start": 574.72,
+        "duration": 2.696
+      },
+      {
+        "text": "but in fact it's rather typical,\nthis number needed to treat.",
+        "start": 577.44,
+        "duration": 3.256
+      },
+      {
+        "text": "For the most widely performed surgery\non men over the age of 50,",
+        "start": 580.72,
+        "duration": 4.616
+      },
+      {
+        "text": "removal of the prostate for cancer,",
+        "start": 585.36,
+        "duration": 2.216
+      },
+      {
+        "text": "the number needed to treat is 49.",
+        "start": 587.6,
+        "duration": 2.576
+      },
+      {
+        "text": "That's right, 49 surgeries are done\nfor every one person who's helped.",
+        "start": 590.2,
+        "duration": 4.176
+      },
+      {
+        "text": "And the side effects in that case\noccur in 50 percent of the patients.",
+        "start": 594.4,
+        "duration": 4.656
+      },
+      {
+        "text": "They include impotence,\nerectile dysfunction,",
+        "start": 599.08,
+        "duration": 2.856
+      },
+      {
+        "text": "urinary incontinence, rectal tearing,",
+        "start": 601.96,
+        "duration": 2.776
+      },
+      {
+        "text": "fecal incontinence.",
+        "start": 604.76,
+        "duration": 1.456
+      },
+      {
+        "text": "And if you're lucky, and you're one\nof the 50 percent who has these,",
+        "start": 606.24,
+        "duration": 3.496
+      },
+      {
+        "text": "they'll only last for a year or two.",
+        "start": 609.76,
+        "duration": 2.04
+      },
+      {
+        "text": "So the idea of the pre-mortem\nis to think ahead of time",
+        "start": 612.88,
+        "duration": 3.616
+      },
+      {
+        "text": "to the questions\nthat you might be able to ask",
+        "start": 616.52,
+        "duration": 2.536
+      },
+      {
+        "text": "that will push the conversation forward.",
+        "start": 619.08,
+        "duration": 2.376
+      },
+      {
+        "text": "You don't want to have to manufacture\nall of this on the spot.",
+        "start": 621.48,
+        "duration": 3.096
+      },
+      {
+        "text": "And you also want to think\nabout things like quality of life.",
+        "start": 624.6,
+        "duration": 2.896
+      },
+      {
+        "text": "Because you have a choice oftentimes,",
+        "start": 627.52,
+        "duration": 1.776
+      },
+      {
+        "text": "do you I want a shorter life\nthat's pain-free,",
+        "start": 629.32,
+        "duration": 2.296
+      },
+      {
+        "text": "or a longer life that might have\na great deal of pain towards the end?",
+        "start": 631.64,
+        "duration": 3.776
+      },
+      {
+        "text": "These are things to talk about\nand think about now,",
+        "start": 635.44,
+        "duration": 2.416
+      },
+      {
+        "text": "with your family and your loved ones.",
+        "start": 637.88,
+        "duration": 1.816
+      },
+      {
+        "text": "You might change your mind\nin the heat of the moment,",
+        "start": 639.72,
+        "duration": 2.496
+      },
+      {
+        "text": "but at least you're practiced\nwith this kind of thinking.",
+        "start": 642.24,
+        "duration": 3.056
+      },
+      {
+        "text": "Remember, our brain under stress\nreleases cortisol,",
+        "start": 645.32,
+        "duration": 4.616
+      },
+      {
+        "text": "and one of the things\nthat happens at that moment",
+        "start": 649.96,
+        "duration": 2.336
+      },
+      {
+        "text": "is a whole bunch on systems shut down.",
+        "start": 652.32,
+        "duration": 1.936
+      },
+      {
+        "text": "There's an evolutionary reason for this.",
+        "start": 654.28,
+        "duration": 1.905
+      },
+      {
+        "text": "Face-to-face with a predator,\nyou don't need your digestive system,",
+        "start": 656.209,
+        "duration": 3.407
+      },
+      {
+        "text": "or your libido, or your immune system,",
+        "start": 659.64,
+        "duration": 2.456
+      },
+      {
+        "text": "because if you're body is expending\nmetabolism on those things",
+        "start": 662.12,
+        "duration": 3.656
+      },
+      {
+        "text": "and you don't react quickly,",
+        "start": 665.8,
+        "duration": 1.656
+      },
+      {
+        "text": "you might become the lion's lunch,\nand then none of those things matter.",
+        "start": 667.48,
+        "duration": 3.976
+      },
+      {
+        "text": "Unfortunately,",
+        "start": 671.48,
+        "duration": 1.416
+      },
+      {
+        "text": "one of the things that goes out the window\nduring those times of stress",
+        "start": 672.92,
+        "duration": 3.616
+      },
+      {
+        "text": "is rational, logical thinking,",
+        "start": 676.56,
+        "duration": 1.976
+      },
+      {
+        "text": "as Danny Kahneman\nand his colleagues have shown.",
+        "start": 678.56,
+        "duration": 3.416
+      },
+      {
+        "text": "So we need to train ourselves\nto think ahead",
+        "start": 682.0,
+        "duration": 3.176
+      },
+      {
+        "text": "to these kinds of situations.",
+        "start": 685.2,
+        "duration": 2.256
+      },
+      {
+        "text": "I think the important point here\nis recognizing that all of us are flawed.",
+        "start": 687.48,
+        "duration": 6.176
+      },
+      {
+        "text": "We all are going to fail now and then.",
+        "start": 693.68,
+        "duration": 2.856
+      },
+      {
+        "text": "The idea is to think ahead\nto what those failures might be,",
+        "start": 696.56,
+        "duration": 3.616
+      },
+      {
+        "text": "to put systems in place\nthat will help minimize the damage,",
+        "start": 700.2,
+        "duration": 3.896
+      },
+      {
+        "text": "or to prevent the bad things\nfrom happening in the first place.",
+        "start": 704.12,
+        "duration": 3.52
+      },
+      {
+        "text": "Getting back to that\nsnowy night in Montreal,",
+        "start": 708.28,
+        "duration": 2.656
+      },
+      {
+        "text": "when I got back from my trip,",
+        "start": 710.96,
+        "duration": 1.736
+      },
+      {
+        "text": "I had my contractor install\na combination lock next to the door,",
+        "start": 712.72,
+        "duration": 3.856
+      },
+      {
+        "text": "with a key to the front door in it,\nan easy to remember combination.",
+        "start": 716.6,
+        "duration": 3.536
+      },
+      {
+        "text": "And I have to admit,",
+        "start": 720.16,
+        "duration": 1.216
+      },
+      {
+        "text": "I still have piles of mail\nthat haven't been sorted,",
+        "start": 721.4,
+        "duration": 3.416
+      },
+      {
+        "text": "and piles of emails\nthat I haven't gone through.",
+        "start": 724.84,
+        "duration": 2.576
+      },
+      {
+        "text": "So I'm not completely organized,",
+        "start": 727.44,
+        "duration": 1.776
+      },
+      {
+        "text": "but I see organization\nas a gradual process,",
+        "start": 729.24,
+        "duration": 3.136
+      },
+      {
+        "text": "and I'm getting there.",
+        "start": 732.4,
+        "duration": 1.216
+      },
+      {
+        "text": "Thank you very much.",
+        "start": 733.64,
+        "duration": 1.216
+      },
+      {
+        "text": "(Applause)",
+        "start": 734.88,
+        "duration": 4.392
+      }
+    ]
+  }
+}

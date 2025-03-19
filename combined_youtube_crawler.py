@@ -1,81 +1,10 @@
-# app.py
-from flask import Flask, request, jsonify
+# combined_youtube_crawler.py
 import asyncio
 import json
 import re
-import os
+import sys
 from crawl4ai import AsyncWebCrawler
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
-
-app = Flask(__name__)
-
-@app.route('/health', methods=['GET'])
-def health_check_root():
-    """Health check endpoint at root path"""
-    return jsonify({
-        "status": "ok"
-    })
-
-@app.route('/api/health', methods=['GET'])
-def health_check_api():
-    """Health check endpoint at /api/health path for Render"""
-    return jsonify({
-        "status": "ok"
-    })
-
-@app.route('/youtube', methods=['POST'])
-def youtube_endpoint():
-    """
-    Process a YouTube URL and return metadata and transcript.
-    
-    Expected JSON input:
-    {
-        "url": "https://www.youtube.com/watch?v=VIDEO_ID"
-    }
-    """
-    try:
-        data = request.json
-        
-        # Check if URL is provided
-        if not data or 'url' not in data:
-            return jsonify({
-                "success": False,
-                "error": "Missing URL",
-                "message": "Please provide a YouTube video URL"
-            }), 400
-        
-        video_url = data['url']
-        
-        # Extract video ID
-        video_id = extract_video_id(video_url)
-        if not video_id:
-            return jsonify({
-                "success": False,
-                "error": "Invalid URL",
-                "message": "Could not extract YouTube video ID from URL"
-            }), 400
-        
-        # Process the video
-        result = asyncio.run(crawl_youtube_with_api(video_url))
-        
-        if result:
-            return jsonify({
-                "success": True,
-                "data": result
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "error": "Processing failed",
-                "message": "Failed to process YouTube video"
-            }), 500
-            
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e),
-            "message": "An error occurred while processing the request"
-        }), 500
 
 async def crawl_youtube_with_api(video_url):
     """
@@ -84,10 +13,15 @@ async def crawl_youtube_with_api(video_url):
     Args:
         video_url: URL of the YouTube video
     """
+    print(f"Starting analysis of {video_url}...")
+    
     # Extract video ID from URL
     video_id = extract_video_id(video_url)
     if not video_id:
+        print("Error: Could not extract video ID from URL. Please provide a valid YouTube URL.")
         return None
+    
+    print(f"Video ID: {video_id}")
     
     # Create tasks for both crawling and transcript extraction
     metadata_task = crawl_for_metadata(video_url)
@@ -103,6 +37,12 @@ async def crawl_youtube_with_api(video_url):
         "metadata": metadata,
         "transcript": transcript
     }
+    
+    # Display summary
+    display_results(result)
+    
+    # Save results
+    save_results(result)
     
     return result
 
@@ -123,6 +63,8 @@ def extract_video_id(url):
 
 async def crawl_for_metadata(video_url):
     """Use crawl4ai to extract metadata from YouTube video page."""
+    print("Extracting video metadata with crawl4ai...")
+    
     try:
         # Configure browser settings
         browser_config = {
@@ -170,6 +112,7 @@ async def crawl_for_metadata(video_url):
                 if date_match:
                     metadata['publish_date'] = date_match.group(1)
             
+            print(f"Metadata extraction complete: {len(metadata)} fields found")
             return metadata
             
     except Exception as e:
@@ -178,6 +121,8 @@ async def crawl_for_metadata(video_url):
 
 async def extract_transcript(video_id):
     """Use youtube-transcript-api to extract transcript."""
+    print("Extracting transcript with youtube-transcript-api...")
+    
     # Create a coroutine to run the synchronous YouTube API in a separate thread
     async def get_transcript_async():
         loop = asyncio.get_event_loop()
@@ -200,6 +145,7 @@ def get_transcript(video_id):
         
         # Get the actual transcript data
         transcript_data = transcript.fetch()
+        print(f"Transcript found: {len(transcript_data)} segments, language: {transcript.language}")
         
         return {
             "success": True,
@@ -209,23 +155,122 @@ def get_transcript(video_id):
         }
         
     except TranscriptsDisabled:
+        print("Error: Transcripts are disabled for this video")
         return {
             "success": False,
             "error": "Transcripts are disabled for this video"
         }
         
     except NoTranscriptFound:
+        print("Error: No transcript found for this video")
         return {
             "success": False,
             "error": "No transcript found for this video"
         }
         
     except Exception as e:
+        print(f"Error extracting transcript: {str(e)}")
         return {
             "success": False,
             "error": str(e)
         }
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+def display_results(result):
+    """Display a summary of the results."""
+    print("\n=== Video Information ===")
+    print(f"Video ID: {result['video_id']}")
+    print(f"URL: {result['video_url']}")
+    
+    # Display metadata
+    if result['metadata']:
+        print("\n=== Metadata ===")
+        title = result['metadata'].get('title', result['metadata'].get('og:title', 'Unknown title'))
+        print(f"Title: {title}")
+        
+        if 'channel' in result['metadata']:
+            print(f"Channel: {result['metadata']['channel']}")
+        
+        if 'views' in result['metadata']:
+            print(f"Views: {result['metadata']['views']:,}")
+        
+        if 'likes' in result['metadata']:
+            print(f"Likes: {result['metadata']['likes']:,}")
+        
+        if 'publish_date' in result['metadata']:
+            print(f"Published: {result['metadata']['publish_date']}")
+    
+    # Display transcript
+    if result['transcript'] and result['transcript'].get('success', False):
+        transcript_data = result['transcript']['segments']
+        print(f"\n=== Transcript ({len(transcript_data)} segments) ===")
+        print(f"Language: {result['transcript']['language']}")
+        print(f"Generated: {'Yes' if result['transcript']['is_generated'] else 'No'}")
+        
+        # Show first 3 segments
+        for i, segment in enumerate(transcript_data[:3]):
+            print(f"{segment['start']:.2f}s: {segment['text']}")
+        
+        if len(transcript_data) > 3:
+            print("...")
+    else:
+        if 'transcript' in result and 'error' in result['transcript']:
+            print(f"\n=== Transcript Error ===\n{result['transcript']['error']}")
+        else:
+            print("\n=== No Transcript Data ===")
+
+def save_results(result, prefix=None):
+    """Save the results to files."""
+    # Generate a filename prefix based on video ID
+    if not prefix:
+        video_id = result['video_id']
+        prefix = f"youtube_{video_id}"
+    
+    # Save full JSON with all data
+    json_file = f"{prefix}_data.json"
+    with open(json_file, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2)
+    
+    print(f"\nFull data saved to {json_file}")
+    
+    # Save transcript to a separate text file if available
+    if result['transcript'] and result['transcript'].get('success', False):
+        transcript_data = result['transcript']['segments']
+        txt_file = f"{prefix}_transcript.txt"
+        
+        with open(txt_file, "w", encoding="utf-8") as f:
+            # Add header with metadata
+            title = result['metadata'].get('title', result['metadata'].get('og:title', 'Unknown title'))
+            f.write(f"Transcript for: {title}\n")
+            f.write(f"Video ID: {result['video_id']}\n")
+            f.write(f"Language: {result['transcript']['language']}\n")
+            f.write(f"Generated: {'Yes' if result['transcript']['is_generated'] else 'No'}\n\n")
+            
+            # Write transcript segments
+            for segment in transcript_data:
+                f.write(f"[{segment['start']:.2f}s - {segment['start'] + segment['duration']:.2f}s] {segment['text']}\n")
+        
+        print(f"Transcript saved to {txt_file}")
+
+def main():
+    """Run the crawler with command line arguments."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="YouTube Crawler with Transcript API")
+    parser.add_argument("--url", required=True, help="YouTube video URL")
+    parser.add_argument("--output", help="Output file prefix (optional)")
+    
+    args = parser.parse_args()
+    
+    # Run the combined crawler
+    result = asyncio.run(crawl_youtube_with_api(args.url))
+    
+    if result and args.output:
+        # Save with custom filename prefix if provided
+        save_results(result, args.output)
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python combined_youtube_crawler.py --url YOUTUBE_URL [--output OUTPUT_PREFIX]")
+        sys.exit(1)
+    
+    main()
